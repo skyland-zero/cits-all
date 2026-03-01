@@ -1,0 +1,17 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net10.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <RootNamespace>MyApi.Application</RootNamespace>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\..\framework\Cits.Identity\Cits.Identity.csproj"/>
+        <ProjectReference Include="..\MyApi.Application.Contracts\MyApi.Application.Contracts.csproj"/>
+        <ProjectReference Include="..\MyApi.Domain.Shared\MyApi.Domain.Shared.csproj"/>
+        <ProjectReference Include="..\MyApi.Domain\MyApi.Domain.csproj"/>
+    </ItemGroup>
+
+</Project>

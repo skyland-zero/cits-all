@@ -1,0 +1,15 @@
+﻿namespace Cits.Entities;
+
+/// <summary>
+/// </summary>
+/// <typeparam name="TKey"></typeparam>
+public class EntityBaseWithSoftDelete<TKey> : EntityBase<TKey>, IDelete
+{
+    public bool IsDeleted { get; set; }
+}
+
+/// <summary>
+/// </summary>
+public class EntityBaseWithSoftDelete : EntityBaseWithSoftDelete<Guid>
+{
+}

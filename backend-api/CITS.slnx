@@ -1,0 +1,17 @@
+<Solution>
+  <Folder Name="/framework/">
+    <Project Path="framework/Cits.Application.Contracts/Cits.Application.Contracts.csproj" />
+    <Project Path="framework/Cits.Base/Cits.Base.csproj" />
+    <Project Path="framework/Cits.Domain/Cits.Domain.csproj" />
+    <Project Path="framework/Cits.Identity/Cits.Identity.csproj" />
+    <Project Path="framework/Cits.WebApi/Cits.WebApi.csproj" />
+  </Folder>
+  <Folder Name="/src/">
+    <File Path="src/README.md" />
+    <Project Path="src/MyApi.Application.Contracts/MyApi.Application.Contracts.csproj" />
+    <Project Path="src/MyApi.Application/MyApi.Application.csproj" />
+    <Project Path="src/MyApi.Domain.Shared/MyApi.Domain.Shared.csproj" />
+    <Project Path="src/MyApi.Domain/MyApi.Domain.csproj" />
+    <Project Path="src/MyApi.HttpApi/MyApi.HttpApi.csproj" />
+  </Folder>
+</Solution>
