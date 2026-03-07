@@ -6,6 +6,9 @@ public static class FreeRedisExtension
 {
     public static void AddFreeRedis(this IServiceCollection services, IConfiguration configuration)
     {
-        services.AddSingleton<RedisClient>(r => new RedisClient(configuration.GetConnectionString("Redis")));
+        var useLocal = configuration.GetValue<bool>("DbConfig:UseLocal");
+        var connectionString = configuration.GetConnectionString(useLocal ? "LocalRedis" : "RemoteRedis");
+        services.AddSingleton<RedisClient>(r => new RedisClient(connectionString));
     }
 }
+

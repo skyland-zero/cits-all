@@ -8,11 +8,20 @@ public static class ConfigureCacheExtension
         IConfiguration configuration)
     {
         services.AddHybridCache();
-        if (EnableRedis)
+        var useLocal = configuration.GetValue<bool>("DbConfig:UseLocal");
+
+        if (useLocal)
+        {
+            services.AddDistributedMemoryCache();
+        }
+        else if (EnableRedis)
+        {
+            var connectionString = configuration.GetConnectionString("RemoteRedis");
             services.AddStackExchangeRedisCache(options =>
             {
-                options.Configuration = configuration.GetConnectionString("Redis");
+                options.Configuration = connectionString;
             });
+        }
 
         return services;
     }

@@ -18,10 +18,14 @@ public static class FreeSqlExtension
     /// <returns></returns>
     public static IServiceCollection ConfigureFreeSql(this IServiceCollection services, IConfiguration configuration)
     {
+        var useLocal = configuration.GetValue<bool>("DbConfig:UseLocal");
+        var connectionString = configuration.GetConnectionString(useLocal ? "Local" : "Remote");
+        var dataType = useLocal ? DataType.Sqlite : DataType.PostgreSQL;
+
         Func<IServiceProvider, IFreeSql> fsqlFactory = r =>
         {
             var fsql = new FreeSqlBuilder()
-                .UseConnectionString(DataType.PostgreSQL, configuration.GetConnectionString("Default"))
+                .UseConnectionString(dataType, connectionString)
                 // .UseMonitorCommand(cmd => Console.WriteLine($"Sql：{cmd.CommandText}"))//监听SQL语句
                 .UseAutoSyncStructure(true) //自动同步实体结构到数据库，FreeSql不会扫描程序集，只有CRUD时才会生成表。
                 .Build();

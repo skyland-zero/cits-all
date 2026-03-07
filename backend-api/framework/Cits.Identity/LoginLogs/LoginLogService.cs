@@ -120,7 +120,18 @@ public class LoginLogService : BackgroundService
     /// <param name="cancellationToken"></param>
     private async Task SaveAsync(List<LoginLog> batch, CancellationToken cancellationToken)
     {
-        await _retryPolicy.ExecuteAsync(async ct => { await _freeSql.Insert(batch.ToList()).ExecutePgCopyAsync(ct); },
+        await _retryPolicy.ExecuteAsync(async ct =>
+            {
+                var insert = _freeSql.Insert(batch.ToList());
+                if (_freeSql.Ado.DataType == FreeSql.DataType.PostgreSQL)
+                {
+                    await insert.ExecutePgCopyAsync(ct);
+                }
+                else
+                {
+                    await insert.ExecuteAffrowsAsync(ct);
+                }
+            },
             cancellationToken);
     }
 }

@@ -1,8 +1,9 @@
-﻿using Cits;
+using Cits;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using MyApi.Domain.Identities;
+using MyApi.Domain.Shared.Identities;
 
 namespace MyApi.Domain;
 
@@ -102,6 +103,212 @@ public class SystemDataSeedContributor : BackgroundService
                 .AnyAsync(x => x.UserId == user.Id && x.RoleId == role.Id, cancellationToken))
         {
             await freeSql.Insert(userRole).ExecuteAffrowsAsync(cancellationToken);
+        }
+
+        await SeedMenusAsync(freeSql, role.Id, cancellationToken);
+    }
+
+    private async Task SeedMenusAsync(IFreeSql freeSql, Guid adminRoleId, CancellationToken ct)
+    {
+        // 先创建页面数据 - 路径调整为 component 要求的格式
+        var pages = new List<IdentityPage>
+        {
+            new() { Id = Guid.Parse("f6e804b2-0ea7-e13a-7787-b03c1b505201"), Name = "分析页", Path = "/dashboard/analytics/index" },
+            new() { Id = Guid.Parse("f6e804b2-0ea7-e13a-7787-b03c1b505202"), Name = "工作台", Path = "/dashboard/workspace/index" },
+            new() { Id = Guid.Parse("f6e804b2-0ea7-e13a-7787-b03c1b505203"), Name = "页面管理", Path = "/system/pages/index" },
+            new() { Id = Guid.Parse("f6e804b2-0ea7-e13a-7787-b03c1b505204"), Name = "工单管理", Path = "/workorder/manages/index" },
+            new() { Id = Guid.Parse("f6e804b2-0ea7-e13a-7787-b03c1b505205"), Name = "创建工单", Path = "/workorder/manages/create" },
+            new() { Id = Guid.Parse("f6e804b2-0ea7-e13a-7787-b03c1b505206"), Name = "用户管理", Path = "/permission/users/index" },
+            new() { Id = Guid.Parse("f6e804b2-0ea7-e13a-7787-b03c1b505207"), Name = "角色管理", Path = "/permission/roles/index" },
+            new() { Id = Guid.Parse("f6e804b2-0ea7-e13a-7787-b03c1b505208"), Name = "部门管理", Path = "/permission/organizations/index" },
+            new() { Id = Guid.Parse("f6e804b2-0ea7-e13a-7787-b03c1b505209"), Name = "菜单管理", Path = "/permission/menus/index" },
+        };
+
+        foreach (var page in pages)
+        {
+            if (!await freeSql.Select<IdentityPage>().AnyAsync(x => x.Id == page.Id, ct))
+            {
+                await freeSql.Insert(page).ExecuteAffrowsAsync(ct);
+            }
+            else
+            {
+                await freeSql.Update<IdentityPage>(page.Id).Set(x => x.Path, page.Path).ExecuteAffrowsAsync(ct);
+            }
+        }
+
+        var menus = new List<IdentityMenu>
+        {
+            // Group: 概览
+            new()
+            {
+                Id = Guid.Parse("f6e804b2-0ea7-e13a-7787-b03c1b505101"),
+                Name = "概览",
+                Path = "/",
+                Redirect = "/analytics",
+                Icon = "mdi:home",
+                Type = IdentityMenuType.Menu,
+                Order = 1,
+                Level = 1
+            },
+            new()
+            {
+                Id = Guid.Parse("f6e804b2-0ea7-e13a-7787-b03c1b505102"),
+                ParentId = Guid.Parse("f6e804b2-0ea7-e13a-7787-b03c1b505101"),
+                Name = "分析页",
+                Path = "/analytics",
+                Icon = "mdi:analytics",
+                Type = IdentityMenuType.Menu,
+                Level = 2,
+                Order = 1,
+                PageId = Guid.Parse("f6e804b2-0ea7-e13a-7787-b03c1b505201")
+            },
+            new()
+            {
+                Id = Guid.Parse("f6e804b2-0ea7-e13a-7787-b03c1b505103"),
+                ParentId = Guid.Parse("f6e804b2-0ea7-e13a-7787-b03c1b505101"),
+                Name = "工作台",
+                Path = "/workspace",
+                Icon = "mdi:work",
+                Type = IdentityMenuType.Menu,
+                Level = 2,
+                Order = 2,
+                PageId = Guid.Parse("f6e804b2-0ea7-e13a-7787-b03c1b505202")
+            },
+            // Group: 工单模块
+            new()
+            {
+                Id = Guid.Parse("f6e804b2-0ea7-e13a-7787-b03c1b505120"),
+                Name = "工单模块",
+                Path = "/workorder",
+                Type = IdentityMenuType.Menu,
+                Order = 2,
+                Level = 1
+            },
+            new()
+            {
+                Id = Guid.Parse("f6e804b2-0ea7-e13a-7787-b03c1b505121"),
+                ParentId = Guid.Parse("f6e804b2-0ea7-e13a-7787-b03c1b505120"),
+                Name = "工单管理",
+                Path = "/workorder/manages/index",
+                Type = IdentityMenuType.Menu,
+                Level = 2,
+                Order = 1,
+                PageId = Guid.Parse("f6e804b2-0ea7-e13a-7787-b03c1b505204")
+            },
+            new()
+            {
+                Id = Guid.Parse("f6e804b2-0ea7-e13a-7787-b03c1b505122"),
+                ParentId = Guid.Parse("f6e804b2-0ea7-e13a-7787-b03c1b505120"),
+                Name = "创建工单",
+                Path = "/workorder/manages/create",
+                Type = IdentityMenuType.Menu,
+                Level = 2,
+                Order = 1,
+                PageId = Guid.Parse("f6e804b2-0ea7-e13a-7787-b03c1b505205")
+            },
+            // Group: 权限设置
+            new()
+            {
+                Id = Guid.Parse("f6e804b2-0ea7-e13a-7787-b03c1b505130"),
+                Name = "权限设置",
+                Path = "/permission",
+                Type = IdentityMenuType.Menu,
+                Order = 90,
+                Level = 1
+            },
+            new()
+            {
+                Id = Guid.Parse("f6e804b2-0ea7-e13a-7787-b03c1b505131"),
+                ParentId = Guid.Parse("f6e804b2-0ea7-e13a-7787-b03c1b505130"),
+                Name = "用户管理",
+                Path = "/permission/user",
+                Type = IdentityMenuType.Menu,
+                Level = 2,
+                Order = 1,
+                PageId = Guid.Parse("f6e804b2-0ea7-e13a-7787-b03c1b505206")
+            },
+            new()
+            {
+                Id = Guid.Parse("f6e804b2-0ea7-e13a-7787-b03c1b505133"),
+                ParentId = Guid.Parse("f6e804b2-0ea7-e13a-7787-b03c1b505130"),
+                Name = "部门管理",
+                Path = "/permission/organization",
+                Type = IdentityMenuType.Menu,
+                Level = 2,
+                Order = 1,
+                PageId = Guid.Parse("f6e804b2-0ea7-e13a-7787-b03c1b505208")
+            },
+            new()
+            {
+                Id = Guid.Parse("f6e804b2-0ea7-e13a-7787-b03c1b505132"),
+                ParentId = Guid.Parse("f6e804b2-0ea7-e13a-7787-b03c1b505130"),
+                Name = "角色管理",
+                Path = "/permission/role",
+                Type = IdentityMenuType.Menu,
+                Level = 2,
+                Order = 3,
+                PageId = Guid.Parse("f6e804b2-0ea7-e13a-7787-b03c1b505207")
+            },
+            new()
+            {
+                Id = Guid.Parse("f6e804b2-0ea7-e13a-7787-b03c1b505134"),
+                ParentId = Guid.Parse("f6e804b2-0ea7-e13a-7787-b03c1b505130"),
+                Name = "菜单管理",
+                Path = "/permission/menu",
+                Type = IdentityMenuType.Menu,
+                Level = 2,
+                Order = 4,
+                PageId = Guid.Parse("f6e804b2-0ea7-e13a-7787-b03c1b505209")
+            },
+            // Group: 系统设置
+            new()
+            {
+                Id = Guid.Parse("f6e804b2-0ea7-e13a-7787-b03c1b505110"),
+                Name = "系统设置",
+                Path = "/system",
+                Type = IdentityMenuType.Menu,
+                Order = 91,
+                Level = 1
+            },
+            new()
+            {
+                Id = Guid.Parse("f6e804b2-0ea7-e13a-7787-b03c1b505111"),
+                ParentId = Guid.Parse("f6e804b2-0ea7-e13a-7787-b03c1b505110"),
+                Name = "页面管理",
+                Path = "/system/page",
+                Type = IdentityMenuType.Menu,
+                Level = 2,
+                Order = 1,
+                PageId = Guid.Parse("f6e804b2-0ea7-e13a-7787-b03c1b505203")
+            },
+        };
+
+        foreach (var menu in menus)
+        {
+            if (!await freeSql.Select<IdentityMenu>().AnyAsync(x => x.Id == menu.Id, ct))
+            {
+                await freeSql.Insert(menu).ExecuteAffrowsAsync(ct);
+            }
+            else
+            {
+                await freeSql.Update<IdentityMenu>(menu.Id)
+                    .Set(x => x.Name, menu.Name)
+                    .Set(x => x.Path, menu.Path)
+                    .Set(x => x.Redirect, menu.Redirect)
+                    .Set(x => x.Icon, menu.Icon)
+                    .Set(x => x.Order, menu.Order)
+                    .Set(x => x.PageId, menu.PageId)
+                    .Set(x => x.ParentId, menu.ParentId)
+                    .ExecuteAffrowsAsync(ct);
+            }
+
+            // 分配权限
+            if (!await freeSql.Select<IdentityRoleMenu>()
+                    .AnyAsync(x => x.RoleId == adminRoleId && x.MenuId == menu.Id, ct))
+            {
+                await freeSql.Insert(new IdentityRoleMenu { RoleId = adminRoleId, MenuId = menu.Id })
+                    .ExecuteAffrowsAsync(ct);
+            }
         }
     }
 }
