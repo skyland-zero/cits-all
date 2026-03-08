@@ -77,6 +77,16 @@ public class MenuCacheModel
     public string Name { get; set; }
 
     /// <summary>
+    ///     路由名称
+    /// </summary>
+    public string? RouteName { get; set; }
+
+    /// <summary>
+    ///     菜单路由名称（针对一级菜单等没有页面的情况）
+    /// </summary>
+    public string? MenuRouteName { get; set; }
+
+    /// <summary>
     ///     类型
     /// </summary>
     public IdentityMenuType Type { get; set; }

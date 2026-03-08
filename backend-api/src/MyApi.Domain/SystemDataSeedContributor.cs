@@ -110,18 +110,18 @@ public class SystemDataSeedContributor : BackgroundService
 
     private async Task SeedMenusAsync(IFreeSql freeSql, Guid adminRoleId, CancellationToken ct)
     {
-        // 先创建页面数据 - 路径调整为 component 要求的格式
+        // 先创建页面数据 - 路径调整为 component 要求的格式 (去掉 views/ 和 .vue)
         var pages = new List<IdentityPage>
         {
-            new() { Id = Guid.Parse("f6e804b2-0ea7-e13a-7787-b03c1b505201"), Name = "分析页", Path = "/dashboard/analytics/index" },
-            new() { Id = Guid.Parse("f6e804b2-0ea7-e13a-7787-b03c1b505202"), Name = "工作台", Path = "/dashboard/workspace/index" },
-            new() { Id = Guid.Parse("f6e804b2-0ea7-e13a-7787-b03c1b505203"), Name = "页面管理", Path = "/system/pages/index" },
-            new() { Id = Guid.Parse("f6e804b2-0ea7-e13a-7787-b03c1b505204"), Name = "工单管理", Path = "/workorder/manages/index" },
-            new() { Id = Guid.Parse("f6e804b2-0ea7-e13a-7787-b03c1b505205"), Name = "创建工单", Path = "/workorder/manages/create" },
-            new() { Id = Guid.Parse("f6e804b2-0ea7-e13a-7787-b03c1b505206"), Name = "用户管理", Path = "/permission/users/index" },
-            new() { Id = Guid.Parse("f6e804b2-0ea7-e13a-7787-b03c1b505207"), Name = "角色管理", Path = "/permission/roles/index" },
-            new() { Id = Guid.Parse("f6e804b2-0ea7-e13a-7787-b03c1b505208"), Name = "部门管理", Path = "/permission/organizations/index" },
-            new() { Id = Guid.Parse("f6e804b2-0ea7-e13a-7787-b03c1b505209"), Name = "菜单管理", Path = "/permission/menus/index" },
+            new() { Id = Guid.Parse("f6e804b2-0ea7-e13a-7787-b03c1b505201"), Name = "分析页", RouteName = "Analytics", Path = "dashboard/analytics/index" },
+            new() { Id = Guid.Parse("f6e804b2-0ea7-e13a-7787-b03c1b505202"), Name = "工作台", RouteName = "Workspace", Path = "dashboard/workspace/index" },
+            new() { Id = Guid.Parse("f6e804b2-0ea7-e13a-7787-b03c1b505203"), Name = "页面管理", RouteName = "Pages", Path = "system/pages/index" },
+            new() { Id = Guid.Parse("f6e804b2-0ea7-e13a-7787-b03c1b505204"), Name = "工单管理", RouteName = "WorkOrderManages", Path = "workorder/manages/index" },
+            new() { Id = Guid.Parse("f6e804b2-0ea7-e13a-7787-b03c1b505205"), Name = "新增工单", RouteName = "WorkOrderCreate", Path = "workorder/manages/create" },
+            new() { Id = Guid.Parse("f6e804b2-0ea7-e13a-7787-b03c1b505206"), Name = "用户管理", RouteName = "Users", Path = "permission/users/index" },
+            new() { Id = Guid.Parse("f6e804b2-0ea7-e13a-7787-b03c1b505207"), Name = "角色管理", RouteName = "Roles", Path = "permission/roles/index" },
+            new() { Id = Guid.Parse("f6e804b2-0ea7-e13a-7787-b03c1b505208"), Name = "部门管理", RouteName = "Organizations", Path = "permission/organizations/index" },
+            new() { Id = Guid.Parse("f6e804b2-0ea7-e13a-7787-b03c1b505209"), Name = "菜单管理", RouteName = "Menus", Path = "permission/menus/index" },
         };
 
         foreach (var page in pages)
@@ -132,20 +132,24 @@ public class SystemDataSeedContributor : BackgroundService
             }
             else
             {
-                await freeSql.Update<IdentityPage>(page.Id).Set(x => x.Path, page.Path).ExecuteAffrowsAsync(ct);
+                await freeSql.Update<IdentityPage>(page.Id)
+                    .Set(x => x.Path, page.Path)
+                    .Set(x => x.RouteName, page.RouteName)
+                    .ExecuteAffrowsAsync(ct);
             }
         }
 
         var menus = new List<IdentityMenu>
         {
-            // Group: 概览
+            // Group: Dashboard
             new()
             {
                 Id = Guid.Parse("f6e804b2-0ea7-e13a-7787-b03c1b505101"),
                 Name = "概览",
-                Path = "/",
+                RouteName = "Dashboard",
+                Path = "/dashboard",
                 Redirect = "/analytics",
-                Icon = "mdi:home",
+                Icon = "lucide:layout-dashboard",
                 Type = IdentityMenuType.Menu,
                 Order = 1,
                 Level = 1
@@ -156,10 +160,11 @@ public class SystemDataSeedContributor : BackgroundService
                 ParentId = Guid.Parse("f6e804b2-0ea7-e13a-7787-b03c1b505101"),
                 Name = "分析页",
                 Path = "/analytics",
-                Icon = "mdi:analytics",
+                Icon = "lucide:area-chart",
                 Type = IdentityMenuType.Menu,
                 Level = 2,
                 Order = 1,
+                AffixTab = true,
                 PageId = Guid.Parse("f6e804b2-0ea7-e13a-7787-b03c1b505201")
             },
             new()
@@ -168,18 +173,20 @@ public class SystemDataSeedContributor : BackgroundService
                 ParentId = Guid.Parse("f6e804b2-0ea7-e13a-7787-b03c1b505101"),
                 Name = "工作台",
                 Path = "/workspace",
-                Icon = "mdi:work",
+                Icon = "carbon:workspace",
                 Type = IdentityMenuType.Menu,
                 Level = 2,
                 Order = 2,
                 PageId = Guid.Parse("f6e804b2-0ea7-e13a-7787-b03c1b505202")
             },
-            // Group: 工单模块
+            // Group: 工单管理
             new()
             {
                 Id = Guid.Parse("f6e804b2-0ea7-e13a-7787-b03c1b505120"),
-                Name = "工单模块",
+                Name = "工单管理",
+                RouteName = "WorkOrder",
                 Path = "/workorder",
+                Icon = "lucide:layout-dashboard",
                 Type = IdentityMenuType.Menu,
                 Order = 2,
                 Level = 1
@@ -190,20 +197,23 @@ public class SystemDataSeedContributor : BackgroundService
                 ParentId = Guid.Parse("f6e804b2-0ea7-e13a-7787-b03c1b505120"),
                 Name = "工单管理",
                 Path = "/workorder/manages/index",
+                Icon = "lucide:area-chart",
                 Type = IdentityMenuType.Menu,
                 Level = 2,
                 Order = 1,
+                KeepAlive = true,
                 PageId = Guid.Parse("f6e804b2-0ea7-e13a-7787-b03c1b505204")
             },
             new()
             {
                 Id = Guid.Parse("f6e804b2-0ea7-e13a-7787-b03c1b505122"),
                 ParentId = Guid.Parse("f6e804b2-0ea7-e13a-7787-b03c1b505120"),
-                Name = "创建工单",
+                Name = "新增工单",
                 Path = "/workorder/manages/create",
                 Type = IdentityMenuType.Menu,
                 Level = 2,
-                Order = 1,
+                Order = 2,
+                HideInMenu = true,
                 PageId = Guid.Parse("f6e804b2-0ea7-e13a-7787-b03c1b505205")
             },
             // Group: 权限设置
@@ -211,7 +221,9 @@ public class SystemDataSeedContributor : BackgroundService
             {
                 Id = Guid.Parse("f6e804b2-0ea7-e13a-7787-b03c1b505130"),
                 Name = "权限设置",
+                RouteName = "Permission",
                 Path = "/permission",
+                Icon = "lucide:layout-dashboard",
                 Type = IdentityMenuType.Menu,
                 Order = 90,
                 Level = 1
@@ -222,6 +234,7 @@ public class SystemDataSeedContributor : BackgroundService
                 ParentId = Guid.Parse("f6e804b2-0ea7-e13a-7787-b03c1b505130"),
                 Name = "用户管理",
                 Path = "/permission/user",
+                Icon = "lucide:area-chart",
                 Type = IdentityMenuType.Menu,
                 Level = 2,
                 Order = 1,
@@ -233,9 +246,10 @@ public class SystemDataSeedContributor : BackgroundService
                 ParentId = Guid.Parse("f6e804b2-0ea7-e13a-7787-b03c1b505130"),
                 Name = "部门管理",
                 Path = "/permission/organization",
+                Icon = "lucide:area-chart",
                 Type = IdentityMenuType.Menu,
                 Level = 2,
-                Order = 1,
+                Order = 2,
                 PageId = Guid.Parse("f6e804b2-0ea7-e13a-7787-b03c1b505208")
             },
             new()
@@ -244,6 +258,7 @@ public class SystemDataSeedContributor : BackgroundService
                 ParentId = Guid.Parse("f6e804b2-0ea7-e13a-7787-b03c1b505130"),
                 Name = "角色管理",
                 Path = "/permission/role",
+                Icon = "lucide:area-chart",
                 Type = IdentityMenuType.Menu,
                 Level = 2,
                 Order = 3,
@@ -255,6 +270,7 @@ public class SystemDataSeedContributor : BackgroundService
                 ParentId = Guid.Parse("f6e804b2-0ea7-e13a-7787-b03c1b505130"),
                 Name = "菜单管理",
                 Path = "/permission/menu",
+                Icon = "lucide:area-chart",
                 Type = IdentityMenuType.Menu,
                 Level = 2,
                 Order = 4,
@@ -265,7 +281,9 @@ public class SystemDataSeedContributor : BackgroundService
             {
                 Id = Guid.Parse("f6e804b2-0ea7-e13a-7787-b03c1b505110"),
                 Name = "系统设置",
+                RouteName = "System",
                 Path = "/system",
+                Icon = "lucide:layout-dashboard",
                 Type = IdentityMenuType.Menu,
                 Order = 91,
                 Level = 1
@@ -276,10 +294,53 @@ public class SystemDataSeedContributor : BackgroundService
                 ParentId = Guid.Parse("f6e804b2-0ea7-e13a-7787-b03c1b505110"),
                 Name = "页面管理",
                 Path = "/system/page",
+                Icon = "lucide:area-chart",
                 Type = IdentityMenuType.Menu,
                 Level = 2,
                 Order = 1,
                 PageId = Guid.Parse("f6e804b2-0ea7-e13a-7787-b03c1b505203")
+            },
+
+            // 权限点示例 (以角色管理为例)
+            new()
+            {
+                Id = Guid.Parse("f6e804b2-0ea7-e13a-7787-b03c1b505301"),
+                ParentId = Guid.Parse("f6e804b2-0ea7-e13a-7787-b03c1b505132"), // 角色管理
+                Name = "查看",
+                Path = "MyApi.Roles",
+                Type = IdentityMenuType.AuthPoint,
+                Level = 3,
+                Order = 1
+            },
+            new()
+            {
+                Id = Guid.Parse("f6e804b2-0ea7-e13a-7787-b03c1b505302"),
+                ParentId = Guid.Parse("f6e804b2-0ea7-e13a-7787-b03c1b505132"), // 角色管理
+                Name = "创建",
+                Path = "MyApi.Roles.Create",
+                Type = IdentityMenuType.AuthPoint,
+                Level = 3,
+                Order = 2
+            },
+            new()
+            {
+                Id = Guid.Parse("f6e804b2-0ea7-e13a-7787-b03c1b505303"),
+                ParentId = Guid.Parse("f6e804b2-0ea7-e13a-7787-b03c1b505132"), // 角色管理
+                Name = "更新",
+                Path = "MyApi.Roles.Update",
+                Type = IdentityMenuType.AuthPoint,
+                Level = 3,
+                Order = 3
+            },
+            new()
+            {
+                Id = Guid.Parse("f6e804b2-0ea7-e13a-7787-b03c1b505304"),
+                ParentId = Guid.Parse("f6e804b2-0ea7-e13a-7787-b03c1b505132"), // 角色管理
+                Name = "删除",
+                Path = "MyApi.Roles.Delete",
+                Type = IdentityMenuType.AuthPoint,
+                Level = 3,
+                Order = 4
             },
         };
 
@@ -293,12 +354,16 @@ public class SystemDataSeedContributor : BackgroundService
             {
                 await freeSql.Update<IdentityMenu>(menu.Id)
                     .Set(x => x.Name, menu.Name)
+                    .Set(x => x.RouteName, menu.RouteName)
                     .Set(x => x.Path, menu.Path)
                     .Set(x => x.Redirect, menu.Redirect)
                     .Set(x => x.Icon, menu.Icon)
                     .Set(x => x.Order, menu.Order)
                     .Set(x => x.PageId, menu.PageId)
                     .Set(x => x.ParentId, menu.ParentId)
+                    .Set(x => x.AffixTab, menu.AffixTab)
+                    .Set(x => x.KeepAlive, menu.KeepAlive)
+                    .Set(x => x.HideInMenu, menu.HideInMenu)
                     .ExecuteAffrowsAsync(ct);
             }
 

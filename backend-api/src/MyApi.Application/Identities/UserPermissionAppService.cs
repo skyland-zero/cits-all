@@ -154,22 +154,31 @@ public class UserPermissionAppService : IUserPermissionAppService
             async cancel =>
             {
                 var menu = await _userPermissionManager.GetUserRoleMenusAsync(userId);
-                var list = menu.Menus.Select(x => new UserPcMenuDto
+                var list = menu.Menus.Select(x =>
                 {
-                    Id = x.Id,
-                    Level = x.Level,
-                    ParentId = x.ParentId,
-                    Name = x.Name,
-                    Path = x.Path,
-                    Redirect = x.Redirect,
-                    Component = x.Component,
-                    Meta = new UserPcMenuMetaDto
+                    var name = !string.IsNullOrWhiteSpace(x.RouteName)
+                        ? x.RouteName
+                        : (!string.IsNullOrWhiteSpace(x.MenuRouteName)
+                            ? x.MenuRouteName
+                            : x.Name);
+
+                    return new UserPcMenuDto
                     {
-                        Order = x.Order,
-                        Title = x.Name,
-                        AffixTab = x.AffixTab,
-                        Icon = x.Icon
-                    }
+                        Id = x.Id,
+                        Level = x.Level,
+                        ParentId = x.ParentId,
+                        Name = name,
+                        Path = x.Path,
+                        Redirect = x.Redirect,
+                        Component = x.Component,
+                        Meta = new UserPcMenuMetaDto
+                        {
+                            Order = x.Order,
+                            Title = x.Name,
+                            AffixTab = x.AffixTab,
+                            Icon = x.Icon
+                        }
+                    };
                 }).ToList();
 
                 return list.FindAll(x => x.Level == 1)

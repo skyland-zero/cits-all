@@ -6,8 +6,6 @@ import type {
   RouteRecordStringComponent,
 } from '@vben-core/typings';
 
-import { mapTree } from '@vben-core/shared/utils';
-
 /**
  * 动态生成路由 - 后端方式
  */
@@ -41,14 +39,22 @@ function convertRoutes(
   routes: RouteRecordStringComponent[],
   layoutMap: ComponentRecordType,
   pageMap: ComponentRecordType,
+  ancestors: string[] = [],
 ): RouteRecordRaw[] {
-  return mapTree(routes, (node) => {
-    const route = node as unknown as RouteRecordRaw;
-    const { component, name } = node;
+  return routes.map((node) => {
+    const route = { ...node } as unknown as RouteRecordRaw;
+    let { component, name } = node;
 
     if (!name) {
       console.error('route name is required', route);
+    } else if (ancestors.includes(name as string)) {
+      // 如果名称与祖先重复，则添加后缀以避免 vue-router 报错
+      // 这种情况通常发生在后端数据配置不当时（例如分组和子页面同名）
+      name = `${name as string}_${ancestors.length}`;
+      route.name = name;
     }
+
+    const currentAncestors = name ? [...ancestors, name as string] : ancestors;
 
     // layout转换
     if (component && layoutMap[component]) {
@@ -65,6 +71,15 @@ function convertRoutes(
         console.error(`route component is invalid: ${pageKey}`, route);
         route.component = pageMap['/_core/fallback/not-found.vue'];
       }
+    }
+
+    if (node.children && node.children.length > 0) {
+      route.children = convertRoutes(
+        node.children,
+        layoutMap,
+        pageMap,
+        currentAncestors,
+      );
     }
 
     return route;

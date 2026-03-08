@@ -182,6 +182,8 @@ public class UserPermissionManager : ISelfSingletonService
                 Order = a.Order,
                 Query = a.Query,
                 Name = a.Name,
+                RouteName = b.RouteName,
+                MenuRouteName = a.RouteName,
                 Type = a.Type,
                 Enabled = a.Enabled,
                 Path = a.Path,

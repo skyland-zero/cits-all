@@ -49,6 +49,14 @@ public class IdentityPageAppService : IIdentityPageAppService
     public async Task CreateAsync(IdentityPageCreateUpdateDto input)
     {
         var entity = input.Adapt<IdentityPage>();
+        if (!input.RouteName.IsNullOrWhiteSpace())
+        {
+            if (await _freeSql.Select<IdentityPage>().AnyAsync(x => x.RouteName == input.RouteName))
+            {
+                throw new UserFriendlyException("路由名称已存在");
+            }
+        }
+
         if (input.ParentId == null || input.ParentId == Guid.Empty)
         {
             if (await _freeSql.Select<IdentityPage>().AnyAsync(x => x.Level == 1 && x.Name == input.Name))
@@ -73,6 +81,14 @@ public class IdentityPageAppService : IIdentityPageAppService
     // [Authorize(BasicPermissions.Pages.Update)]
     public async Task UpdateAsync(Guid id, IdentityPageCreateUpdateDto input)
     {
+        if (!input.RouteName.IsNullOrWhiteSpace())
+        {
+            if (await _freeSql.Select<IdentityPage>().AnyAsync(x => x.RouteName == input.RouteName && x.Id != id))
+            {
+                throw new UserFriendlyException("路由名称已存在");
+            }
+        }
+
         var entity = await _freeSql.Select<IdentityPage>().Where(x => x.Id == id).FirstAsync();
         input.Adapt(entity);
         await _freeSql.Update<IdentityPage>().SetSource(entity).ExecuteAffrowsAsync();

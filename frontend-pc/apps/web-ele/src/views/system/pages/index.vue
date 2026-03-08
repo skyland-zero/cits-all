@@ -214,6 +214,7 @@ onMounted(() => {
       v-loading="loading"
     >
       <ElTableColumn fixed label="名称" prop="name" />
+      <ElTableColumn label="路由名称" prop="routeName" />
       <ElTableColumn label="页面路径" prop="path" />
       <ElTableColumn label="说明" prop="description" />
       <ElTableColumn align="center" label="排序" prop="sort" width="70" />

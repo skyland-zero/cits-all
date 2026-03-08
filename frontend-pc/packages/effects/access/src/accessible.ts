@@ -30,10 +30,14 @@ async function generateAccessible(
 
   const root = router.getRoutes().find((item) => item.path === '/');
 
+  // 动态添加到router实例内
+  if (mode === 'backend' && root) {
+    root.children = [];
+  }
+
   // 获取已有的路由名称列表
   const names = root?.children?.map((item) => item.name) ?? [];
 
-  // 动态添加到router实例内
   accessibleRoutes.forEach((route) => {
     if (root && !route.meta?.noBasicLayout) {
       // 为了兼容之前的版本用法，如果包含子路由，则将component移除，以免出现多层BasicLayout

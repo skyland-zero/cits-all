@@ -368,6 +368,7 @@ onMounted(() => {
       v-loading="loading"
     >
       <ElTableColumn fixed label="名称" prop="name" />
+      <ElTableColumn label="路由名称" prop="routeName" />
       <ElTableColumn align="center" label="类型" prop="typeStr" width="70" />
       <ElTableColumn label="路由/编码" prop="path">
         <template #default="scope">

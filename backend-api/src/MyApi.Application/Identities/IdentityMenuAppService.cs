@@ -72,6 +72,14 @@ public class IdentityMenuAppService : IIdentityMenuAppService
     public async Task CreateAsync(IdentityMenuCreateDto input)
     {
         var entity = input.Adapt<IdentityMenu>();
+        if (!string.IsNullOrWhiteSpace(input.RouteName))
+        {
+            if (await _freeSql.Select<IdentityMenu>().AnyAsync(x => x.RouteName == input.RouteName))
+            {
+                throw new UserFriendlyException("路由名称已存在");
+            }
+        }
+
         if (input.ParentId == null || input.ParentId == Guid.Empty)
         {
             if (await _freeSql.Select<IdentityMenu>().AnyAsync(x => x.Level == 1 && x.Name == input.Name))
@@ -98,11 +106,19 @@ public class IdentityMenuAppService : IIdentityMenuAppService
         foreach (var input in inputs)
         {
             var entity = input.Adapt<IdentityMenu>();
+            if (!string.IsNullOrWhiteSpace(input.RouteName))
+            {
+                if (await _freeSql.Select<IdentityMenu>().AnyAsync(x => x.RouteName == input.RouteName))
+                {
+                    throw new UserFriendlyException($"路由名称 {input.RouteName} 已存在");
+                }
+            }
+
             if (input.ParentId == null || input.ParentId == Guid.Empty)
             {
                 if (await _freeSql.Select<IdentityMenu>().AnyAsync(x => x.Level == 1 && x.Name == input.Name))
                 {
-                    throw new UserFriendlyException("名称已存在");
+                    throw new UserFriendlyException($"名称 {input.Name} 已存在");
                 }
             }
             else
@@ -123,6 +139,14 @@ public class IdentityMenuAppService : IIdentityMenuAppService
     // [Authorize(BasicPermissions.Menus.Update)]
     public async Task UpdateAsync(Guid id, IdentityMenuUpdateDto input)
     {
+        if (!string.IsNullOrWhiteSpace(input.RouteName))
+        {
+            if (await _freeSql.Select<IdentityMenu>().AnyAsync(x => x.RouteName == input.RouteName && x.Id != id))
+            {
+                throw new UserFriendlyException("路由名称已存在");
+            }
+        }
+
         var entity = await _freeSql.Select<IdentityMenu>().Where(x => x.Id == id).FirstAsync();
 
         var hasChanges = DtoEntityComparer.HasChanges(input, entity);

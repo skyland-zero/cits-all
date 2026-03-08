@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations;
 using MyApi.Domain.Shared.Identities;
 
 namespace MyApi.Application.Identities.Dto;
@@ -68,15 +69,20 @@ public class IdentityMenuUpdateDto
     ///     路由参数
     /// </summary>
     public string? Query { get; set; }
+/// <summary>
+///     标题名称
+/// </summary>
+[Required]
+public string Name { get; set; }
 
-    /// <summary>
-    ///     标题名称
-    /// </summary>
-    public string Name { get; set; }
+/// <summary>
+///     路由名称
+/// </summary>
+public string? RouteName { get; set; }
 
-    /// <summary>
-    ///     类型
-    /// </summary>
+/// <summary>
+///     类型
+/// </summary>
     public IdentityMenuType Type { get; set; }
 
     /// <summary>

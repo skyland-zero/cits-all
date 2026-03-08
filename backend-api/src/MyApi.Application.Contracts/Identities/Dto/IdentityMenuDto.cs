@@ -76,6 +76,11 @@ public class IdentityMenuDto : EntityDto<Guid>
     public string Name { get; set; }
 
     /// <summary>
+    ///     路由名称
+    /// </summary>
+    public string? RouteName { get; set; }
+
+    /// <summary>
     ///     类型
     /// </summary>
     public IdentityMenuType Type { get; set; }

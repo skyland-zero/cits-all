@@ -40,6 +40,7 @@ const initData = () => ({
   parentId: null,
   pageId: null,
   name: '',
+  routeName: '',
   path: '',
   redirect: '',
   query: '',
@@ -68,6 +69,13 @@ const rules = reactive<FormRules>({
       min: 1,
       max: 50,
       message: '长度在 1 到 50 个字符',
+      trigger: 'blur',
+    },
+  ],
+  routeName: [
+    {
+      pattern: /^[a-zA-Z0-9_-]+$/,
+      message: '路由名称只能包含英文、数字、下划线和横线',
       trigger: 'blur',
     },
   ],
@@ -178,6 +186,13 @@ defineExpose({
     </ElFormItem>
     <ElFormItem :label-width="formLabelWidth" label="菜单名称：" prop="name">
       <ElInput v-model="formData.name" autocomplete="off" />
+    </ElFormItem>
+    <ElFormItem :label-width="formLabelWidth" label="路由名称：" prop="routeName">
+      <ElInput
+        v-model="formData.routeName"
+        autocomplete="off"
+        placeholder="唯一的英文路由名称"
+      />
     </ElFormItem>
     <ElFormItem :label-width="formLabelWidth" label="路由地址：" prop="path">
       <ElInput v-model="formData.path" autocomplete="off" />

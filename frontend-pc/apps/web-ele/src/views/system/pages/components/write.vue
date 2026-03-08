@@ -33,6 +33,7 @@ const formLabelWidth = '100px';
 const initData = () => ({
   parentId: null,
   name: '',
+  routeName: '',
   path: '',
   description: '',
   sort: 1,
@@ -44,6 +45,14 @@ const rules = reactive<FormRules>({
   name: [
     { required: true, message: '请输入页面名称', trigger: 'blur' },
     { min: 1, max: 20, message: '长度在 1 到 20 个字符', trigger: 'blur' },
+  ],
+  routeName: [
+    { required: true, message: '请输入路由名称', trigger: 'blur' },
+    {
+      pattern: /^[a-zA-Z0-9_-]+$/,
+      message: '路由名称只能包含英文、数字、下划线和横线',
+      trigger: 'blur',
+    },
   ],
   path: [
     { required: true, message: '请输入页面路径', trigger: 'blur' },
@@ -111,6 +120,13 @@ defineExpose({
     </ElFormItem>
     <ElFormItem :label-width="formLabelWidth" label="页面名称：" prop="name">
       <ElInput v-model="formData.name" autocomplete="off" />
+    </ElFormItem>
+    <ElFormItem :label-width="formLabelWidth" label="路由名称：" prop="routeName">
+      <ElInput
+        v-model="formData.routeName"
+        autocomplete="off"
+        placeholder="唯一的英文路由名称"
+      />
     </ElFormItem>
     <ElFormItem :label-width="formLabelWidth" label="页面路径：" prop="path">
       <ElInput

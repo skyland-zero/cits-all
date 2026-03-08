@@ -12,6 +12,11 @@ public class IdentityPageTreeDto : EntityDto<Guid>
     public string? Name { get; set; }
 
     /// <summary>
+    ///     路由名称
+    /// </summary>
+    public string? RouteName { get; set; }
+
+    /// <summary>
     ///     页面路径
     /// </summary>
     public string? Path { get; set; }

@@ -123,14 +123,7 @@ public class LoginLogService : BackgroundService
         await _retryPolicy.ExecuteAsync(async ct =>
             {
                 var insert = _freeSql.Insert(batch.ToList());
-                if (_freeSql.Ado.DataType == FreeSql.DataType.PostgreSQL)
-                {
-                    await insert.ExecutePgCopyAsync(ct);
-                }
-                else
-                {
-                    await insert.ExecuteAffrowsAsync(ct);
-                }
+                await insert.ExecuteAffrowsAsync(ct);
             },
             cancellationToken);
     }
