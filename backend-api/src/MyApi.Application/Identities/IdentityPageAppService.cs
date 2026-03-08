@@ -12,10 +12,14 @@ namespace MyApi.Application.Identities;
 public class IdentityPageAppService : IIdentityPageAppService
 {
     private readonly IFreeSql _freeSql;
+    private readonly UserPermissionManager _userPermissionManager;
+    private readonly UserPermissionCachePreWarmer _preWarmer;
 
-    public IdentityPageAppService(IFreeSql freeSql)
+    public IdentityPageAppService(IFreeSql freeSql, UserPermissionManager userPermissionManager, UserPermissionCachePreWarmer preWarmer)
     {
         _freeSql = freeSql;
+        _userPermissionManager = userPermissionManager;
+        _preWarmer = preWarmer;
     }
 
     // [Authorize(BasicPermissions.Pages.Default)]
@@ -90,8 +94,44 @@ public class IdentityPageAppService : IIdentityPageAppService
         }
 
         var entity = await _freeSql.Select<IdentityPage>().Where(x => x.Id == id).FirstAsync();
+        var hasChanges = DtoEntityComparer.HasChanges(input, entity);
         input.Adapt(entity);
         await _freeSql.Update<IdentityPage>().SetSource(entity).ExecuteAffrowsAsync();
+        if (hasChanges)
+        {
+            await RemovePageMenuCacheAsync(id);
+        }
+    }
+
+    /// <summary>
+    /// 删除页面关联到的菜单关联到的角色再关联到的用户的菜单缓存
+    /// </summary>
+    /// <param name="id"></param>
+    private async ValueTask RemovePageMenuCacheAsync(Guid id)
+    {
+        var menuIds = await _freeSql.Select<IdentityMenu>()
+            .Where(x => x.PageId == id)
+            .ToListAsync(x => x.Id);
+
+        if (!menuIds.Any())
+        {
+            return;
+        }
+
+        var roleIds = await _freeSql.Select<IdentityRoleMenu>()
+            .Where(x => menuIds.Contains(x.MenuId))
+            .ToListAsync(x => x.RoleId);
+
+        if (!roleIds.Any())
+        {
+            return;
+        }
+
+        await _userPermissionManager.RemoveUserRoleMenusCacheAsync(roleIds);
+        foreach (var roleId in roleIds)
+        {
+            _preWarmer.PreWarmByRoleId(roleId);
+        }
     }
 
     // [Authorize(BasicPermissions.Pages.Delete)]
@@ -111,6 +151,8 @@ public class IdentityPageAppService : IIdentityPageAppService
             .Set(x => x.IsDeleted == true)
             .WhereDynamic(id)
             .ExecuteAffrowsAsync();
+
+        await RemovePageMenuCacheAsync(id);
     }
 
     public async Task<ListResultDto<IdentityPageTreeDto>> GetTreeAsync()
