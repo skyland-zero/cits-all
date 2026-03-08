@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 namespace Cits.Authorization;
 
@@ -10,18 +11,27 @@ public class CitsPermissionAuthorizationHandler : AuthorizationHandler<CitsPermi
 {
     private readonly ILogger<CitsPermissionAuthorizationHandler> _logger;
     private readonly ICitsUserPermissionProvider _userPermissionProvider;
+    private readonly PermissionOptions _options;
 
     public CitsPermissionAuthorizationHandler(ILogger<CitsPermissionAuthorizationHandler> logger,
-        ICitsUserPermissionProvider userPermissionProvider)
+        ICitsUserPermissionProvider userPermissionProvider,
+        IOptions<PermissionOptions> options)
     {
         _logger = logger;
         _userPermissionProvider = userPermissionProvider;
+        _options = options.Value;
     }
 
     // Check whether a given MinimumAgeRequirement is satisfied or not for a particular context
     protected override async Task HandleRequirementAsync(AuthorizationHandlerContext context,
         CitsPermissionRequirement requirement)
     {
+        if (!_options.Enabled)
+        {
+            context.Succeed(requirement);
+            return;
+        }
+
         // Log as a warning so that it's very clear in sample output which authorization policies
         // (and requirements/handlers) are in use
         _logger.LogWarning("权限点判断 {age}", requirement.Code);

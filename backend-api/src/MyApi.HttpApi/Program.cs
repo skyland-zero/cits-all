@@ -38,7 +38,7 @@ builder.Services.ConfigureApiBehavior();
 builder.Services.AddJwtService();
 builder.Services.ConfigureAuthentication(builder.Configuration);
 //授权
-builder.Services.AddPermission();
+builder.Services.AddPermission(builder.Configuration);
 //其他服务
 builder.Services.ConfigureFreeSql(builder.Configuration);
 builder.Services.ConfigureDataSeed();
