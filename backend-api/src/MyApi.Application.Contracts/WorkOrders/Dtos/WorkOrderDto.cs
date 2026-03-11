@@ -49,6 +49,11 @@ public class WorkOrderDto : EntityDto<Guid>
     public string? Attachments { get; set; }
 
     /// <summary>
+    /// 附件列表对象（供前端展示）
+    /// </summary>
+    public List<FileAttachmentDto>? AttachmentList { get; set; }
+
+    /// <summary>
     /// 当前状态
     /// </summary>
     public WorkOrderStatus CurrentStatus { get; set; }

@@ -32,6 +32,7 @@ import {
 import { MyContainer } from '#/components';
 
 import Write from './components/write.vue';
+import WorkOrderStatsCard from './components/WorkOrderStatsCard.vue';
 import Detail from './detail.vue';
 import { actionEnum, WorkOrderPriority, WorkOrderStatus } from './enums';
 
@@ -40,6 +41,7 @@ defineOptions({ name: 'WorkOrderManages' });
 const router = useRouter();
 
 const tableData = ref<any[]>([]);
+const statsCardRef = ref<InstanceType<typeof WorkOrderStatsCard>>();
 const currentRow = ref<any | null>(null);
 const searchFormRef = ref<FormInstance>();
 const dialogFormVisible = ref(false);
@@ -81,6 +83,8 @@ const search = async () => {
     const res = await pageApi(pager, formSearchData);
     tableData.value = res.items;
     pager.totalCount = res.totalCount;
+    // 刷新统计数据
+    statsCardRef.value?.refresh();
   } catch (error) {
     console.error(error);
   } finally {
@@ -287,6 +291,9 @@ const getStatusTagType = (val: number) => {
 <template>
   <MyContainer :show-aside="false" :show-footer="true" :show-left-aside="false">
     <template #header>
+      <div class="p-4 bg-white mb-4">
+        <WorkOrderStatsCard ref="statsCardRef" />
+      </div>
       <ElForm ref="searchFormRef" :inline="true" :model="formSearchData"
         class="demo-form-inline ml-[18px] mr-[18px] mt-[18px]">
         <ElFormItem label="标题">

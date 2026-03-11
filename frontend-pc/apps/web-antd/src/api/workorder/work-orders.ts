@@ -44,3 +44,10 @@ export async function getApi(id: string) {
 export async function statsApi() {
   return requestClient.get<any>('/workorder/work-order/stats');
 }
+
+/**
+ * 执行触发器动作
+ */
+export async function fireApi(id: string, trigger: string) {
+  return requestClient.post<any>(`/workorder/work-order/${id}/${trigger}`);
+}

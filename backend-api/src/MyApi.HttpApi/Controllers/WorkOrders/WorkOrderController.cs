@@ -67,6 +67,15 @@ public class WorkOrderController : WorkOrderBaseApiController
         await _workOrderService.DeleteAsync(id);
     }
 
+    /// <summary>
+    /// 获取工单统计数据
+    /// </summary>
+    [HttpGet("stats")]
+    public async Task<WorkOrderStatsDto> GetStatsAsync()
+    {
+        return await _workOrderService.GetStatsAsync();
+    }
+
     [HttpPost("{id}/submit")]
     public async Task<IActionResult> Submit(Guid id, [FromServices] IWorkOrderWorkflowFactory factory)
     {

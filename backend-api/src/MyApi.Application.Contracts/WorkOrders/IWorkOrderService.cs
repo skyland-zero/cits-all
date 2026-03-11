@@ -33,4 +33,9 @@ public interface IWorkOrderService : IApplicationService
     /// 删除工单
     /// </summary>
     Task DeleteAsync(Guid id);
+
+    /// <summary>
+    /// 获取工单统计数据
+    /// </summary>
+    Task<WorkOrderStatsDto> GetStatsAsync();
 }

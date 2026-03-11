@@ -38,4 +38,10 @@ public class IdentityUser : EntityBaseWithSoftDelete
     /// 角色
     /// </summary>
     public Guid MainRoleId { get; set; }
+
+    /// <summary>
+    /// 企业微信用户 ID
+    /// </summary>
+    [MaxLength(100)]
+    public string? CorpWxUserId { get; set; }
 }

@@ -11,9 +11,14 @@ import {
   ElInput,
   ElOption,
   ElSelect,
+  ElUpload,
   type FormInstance,
   type FormRules,
+  type UploadProps,
+  type UploadUserFile,
 } from 'element-plus';
+
+import { requestClient } from '#/api/request';
 
 import { WorkOrderPriority } from '../enums';
 
@@ -27,6 +32,8 @@ const formRef = ref<FormInstance>();
 const formLabelWidth = '120px';
 const loading = ref(false);
 
+const fileList = ref<UploadUserFile[]>([]);
+
 const initData = () => ({
   id: '',
   title: '',
@@ -36,6 +43,7 @@ const initData = () => ({
   contactName: '',
   contactPhone: '',
   deadlineTime: '',
+  attachments: '[]',
 });
 const formData = reactive(initData());
 
@@ -57,8 +65,39 @@ const rules = reactive<FormRules>({
   location: [{ max: 200, message: '长度不能超过 200 个字符', trigger: 'blur' }],
 });
 
+const handleUpload = async (options: any) => {
+  try {
+    const { file } = options;
+    const response = await requestClient.upload('/basic/upload/Upload/single', {
+      file,
+    });
+    // 假设后端返回的是保存成功的 FileAttachment 实体/DTO 信息
+    return response;
+  } catch (error) {
+    console.error('Upload failed', error);
+    throw error;
+  }
+};
+
+const onUploadSuccess: UploadProps['onSuccess'] = (response, uploadFile) => {
+  // 记录后端返回的文件标识信息
+  uploadFile.url = response.url || response.relativePath;
+  // 后端返回的实体通常包含 Id
+  (uploadFile as any).fileId = response.id;
+};
+
 const setValues = (currentRow: any) => {
   Object.assign(formData, currentRow);
+  // 处理附件回显
+  if (currentRow.attachmentList && Array.isArray(currentRow.attachmentList)) {
+    fileList.value = currentRow.attachmentList.map((item: any) => ({
+      name: item.originalName,
+      url: item.url || item.relativePath,
+      fileId: item.id,
+    }));
+  } else {
+    fileList.value = [];
+  }
 };
 
 const submit = async () => {
@@ -70,6 +109,16 @@ const submit = async () => {
     console.log('valid', error);
   });
   if (valid) {
+    // 将当前的 fileList 转换为 JSON 存入 attachments
+    // 只存储必要的文件标识信息，例如 Id 数组或对象数组
+    const attachmentsData = fileList.value
+      .filter((f) => f.status === 'success')
+      .map((f: any) => ({
+        id: f.fileId,
+        name: f.name,
+        url: f.url,
+      }));
+    formData.attachments = JSON.stringify(attachmentsData);
     return formData;
   }
 };
@@ -129,6 +178,15 @@ defineExpose({
 
     <ElFormItem :label-width="formLabelWidth" label="描述：" prop="description">
       <ElInput v-model="formData.description" type="textarea" :rows="4" placeholder="请输入工单描述" />
+    </ElFormItem>
+
+    <ElFormItem :label-width="formLabelWidth" label="附件：">
+      <ElUpload v-model:file-list="fileList" :http-request="handleUpload" :on-success="onUploadSuccess" multiple
+        list-type="text">
+        <template #trigger>
+          <el-button type="primary">点击上传</el-button>
+        </template>
+      </ElUpload>
     </ElFormItem>
   </ElForm>
 </template>
