@@ -4,6 +4,7 @@ using Cits.Jwt;
 using Cits.LoginLogs;
 using Cits.Permissions;
 using Microsoft.AspNetCore.Mvc.ApplicationModels;
+using MyApi.HttpApi.Json;
 using MyApi.Domain.DomainServices.CorpWx;
 using MyApi.Domain.DomainServices.WorkOrders;
 using MyApi.Application.Identities;
@@ -28,6 +29,10 @@ builder.Services.AddControllers(options =>
 {
     options.Filters.Add<GlobalExceptionFilter>();
     options.Conventions.Add(new RouteTokenTransformerConvention(new SlugifyParameterTransformer())); //路由转换为小写加下划线格式
+}).AddJsonOptions(options =>
+{
+    options.JsonSerializerOptions.Converters.Add(new FlexibleDateTimeConverter());
+    options.JsonSerializerOptions.Converters.Add(new FlexibleNullableDateTimeConverter());
 });
 builder.Services.Configure<RouteOptions>(options =>
 {

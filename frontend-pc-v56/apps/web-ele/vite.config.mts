@@ -22,6 +22,12 @@ export default defineConfig(async () => {
             target: 'http://localhost:5120/api',
             ws: true,
           },
+          '/hub': {
+            changeOrigin: true,
+            secure: false,
+            target: 'http://localhost:5120',
+            ws: true,
+          },
         },
       },
     },

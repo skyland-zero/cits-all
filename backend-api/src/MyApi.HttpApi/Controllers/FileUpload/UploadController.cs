@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using MyApi.Application.Contracts.WorkOrders.Dtos;
 using MyApi.Domain.DomainServices.FileUpload;
@@ -18,13 +19,15 @@ public class UploadController : BaseApiController
     private readonly IStorageProvider _storage;
     private readonly IFreeSql _fsql;
     private readonly FileAccessSignatureService _fileAccessSignatureService;
+    private readonly ILogger<UploadController> _logger;
     private readonly IOptionsMonitor<UploadOptions> _uploadOptions;
     private readonly FileValidationService _validator;
     private readonly IHubContext<UploadHub> _hub;
 
     public UploadController(ICurrentUser currentUser, IStorageProvider storage, IFreeSql fsql,
         FileValidationService validator, IHubContext<UploadHub> hub,
-        FileAccessSignatureService fileAccessSignatureService, IOptionsMonitor<UploadOptions> uploadOptions)
+        FileAccessSignatureService fileAccessSignatureService, IOptionsMonitor<UploadOptions> uploadOptions,
+        ILogger<UploadController> logger)
     {
         _currentUser = currentUser;
         _storage = storage;
@@ -32,6 +35,7 @@ public class UploadController : BaseApiController
         _validator = validator;
         _hub = hub;
         _fileAccessSignatureService = fileAccessSignatureService;
+        _logger = logger;
         _uploadOptions = uploadOptions;
     }
 
@@ -89,8 +93,9 @@ public class UploadController : BaseApiController
         {
             throw new UserFriendlyException("上传已取消");
         }
-        catch (Exception)
+        catch (Exception ex)
         {
+            _logger.LogError(ex, "上传文件存储失败: {FileName}", file.FileName);
             throw new UserFriendlyException("存储失败");
         }
 

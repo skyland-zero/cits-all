@@ -3,7 +3,16 @@ import type { Nullable } from '@vben/types';
 import type { HubConnection } from '@microsoft/signalr';
 
 import { HubConnectionBuilder, LogLevel } from '@microsoft/signalr';
-import { onMounted, onUnmounted, type PropType, reactive, ref, watch } from 'vue';
+import dayjs from 'dayjs';
+import {
+  computed,
+  onMounted,
+  onUnmounted,
+  type PropType,
+  reactive,
+  ref,
+  watch,
+} from 'vue';
 
 import {
   ElDatePicker,
@@ -40,6 +49,7 @@ type UploadFileItem = UploadUserFile & {
 
 type UploadedAttachment = {
   downloadUrl?: string;
+  extension?: string;
   id: string;
   relativePath?: string;
   url?: string;
@@ -114,6 +124,19 @@ const initData = () => ({
 });
 const formData = reactive(initData());
 
+const imageExtensions = new Set([
+  '.apng',
+  '.avif',
+  '.bmp',
+  '.gif',
+  '.ico',
+  '.jpeg',
+  '.jpg',
+  '.png',
+  '.svg',
+  '.webp',
+]);
+
 const priorityOptions = [
   { label: '低', value: WorkOrderPriority.Low },
   { label: '中', value: WorkOrderPriority.Medium },
@@ -135,6 +158,19 @@ const rules = reactive<FormRules>({
 const getFileUid = (file: Pick<UploadFile, 'uid'> | UploadRequestOptions['file']) => {
   return String(file.uid);
 };
+
+const getFileExtension = (fileName: string) => {
+  const dotIndex = fileName.lastIndexOf('.');
+  return dotIndex >= 0 ? fileName.slice(dotIndex).toLowerCase() : '';
+};
+
+const isImageFile = (file: Pick<UploadFileItem, 'name' | 'url'>) => {
+  return imageExtensions.has(getFileExtension(file.name));
+};
+
+const uploadListType = computed(() => {
+  return fileList.value.some((file) => isImageFile(file)) ? 'picture' : 'text';
+});
 
 const findFileItem = (uid: string) => {
   return fileList.value.find((item) => item.uid !== undefined && String(item.uid) === uid);
@@ -414,8 +450,22 @@ const onUploadSuccess: UploadProps['onSuccess'] = (response, uploadFile) => {
   applyUploadSuccess(getFileUid(uploadFile), attachment);
 };
 
+const handlePreview: UploadProps['onPreview'] = (uploadFile) => {
+  const targetUrl = uploadFile.url || (uploadFile as UploadFileItem).downloadUrl;
+  if (!targetUrl) {
+    return;
+  }
+
+  window.open(targetUrl, '_blank', 'noopener,noreferrer');
+};
+
 const setValues = (currentRow: any) => {
-  Object.assign(formData, currentRow);
+  Object.assign(formData, {
+    ...currentRow,
+    deadlineTime: currentRow.deadlineTime
+      ? dayjs(currentRow.deadlineTime).format('YYYY-MM-DD HH:mm:ss')
+      : '',
+  });
   if (currentRow.attachmentList && Array.isArray(currentRow.attachmentList)) {
     fileList.value = currentRow.attachmentList.map((item: any, index: number) => ({
       downloadUrl: item.downloadUrl,
@@ -450,8 +500,14 @@ const submit = async () => {
       id: file.fileId,
       name: file.name,
     }));
-  formData.attachments = JSON.stringify(attachmentsData);
-  return formData;
+
+  return {
+    ...formData,
+    attachments: JSON.stringify(attachmentsData),
+    deadlineTime: formData.deadlineTime
+      ? dayjs(formData.deadlineTime).format('YYYY-MM-DDTHH:mm:ss')
+      : null,
+  };
 };
 
 watch(
@@ -526,7 +582,7 @@ defineExpose({
 
     <ElFormItem :label-width="formLabelWidth" label="附件：">
       <ElUpload v-model:file-list="fileList" :http-request="handleUpload" :on-remove="handleRemove"
-        :on-success="onUploadSuccess" multiple list-type="text">
+        :list-type="uploadListType" :on-preview="handlePreview" :on-success="onUploadSuccess" multiple>
         <template #trigger>
           <el-button type="primary">点击上传</el-button>
         </template>

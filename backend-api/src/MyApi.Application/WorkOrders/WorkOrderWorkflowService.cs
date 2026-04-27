@@ -17,6 +17,11 @@ namespace MyApi.Application.WorkOrders;
 /// </summary>
 public class WorkOrderWorkflowService : IWorkOrderWorkflowService
 {
+    private static readonly System.Text.Json.JsonSerializerOptions AttachmentJsonOptions = new()
+    {
+        PropertyNameCaseInsensitive = true,
+    };
+
     private readonly IFreeSql _fsql;
     private readonly IIdGenerator _idGenerator;
     private readonly ICorpWxClient _corpWxClient;
@@ -253,7 +258,7 @@ public class WorkOrderWorkflowService : IWorkOrderWorkflowService
             {
                 try
                 {
-                    currentAttachments = System.Text.Json.JsonSerializer.Deserialize<List<AttachmentItem>>(order.Attachments) ?? new();
+                    currentAttachments = System.Text.Json.JsonSerializer.Deserialize<List<AttachmentItem>>(order.Attachments, AttachmentJsonOptions) ?? new();
                 }
                 catch { }
             }

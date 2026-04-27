@@ -18,6 +18,11 @@ namespace MyApi.Application.WorkOrders;
 /// </summary>
 public class WorkOrderService : IWorkOrderService
 {
+    private static readonly JsonSerializerOptions AttachmentJsonOptions = new()
+    {
+        PropertyNameCaseInsensitive = true,
+    };
+
     private readonly IFreeSql _fsql;
     private readonly IIdGenerator _idGenerator;
     private readonly ICurrentUser _currentUser;
@@ -315,7 +320,7 @@ public class WorkOrderService : IWorkOrderService
 
         try
         {
-            var attachInfos = JsonSerializer.Deserialize<List<AttachmentInfo>>(attachments);
+            var attachInfos = JsonSerializer.Deserialize<List<AttachmentInfo>>(attachments, AttachmentJsonOptions);
             return attachInfos?
                 .Select(x => x.Id)
                 .Where(x => x != Guid.Empty)

@@ -20,7 +20,7 @@ public class LocalStorageProvider : IStorageProvider
     private string GetAvailableRoot()
     {
         var paths = _config.GetSection("StorageConfig:Local:Paths").Get<string[]>();
-        var minFree = _config.GetValue<long>("StorageConfig:Local:MinFreeGB") * 1024 * 1024 * 1024;
+        var minFree = _config.GetValue<double>("StorageConfig:Local:MinFreeGB") * 1024 * 1024 * 1024;
 
         foreach (var path in paths)
         {
@@ -60,21 +60,22 @@ public class LocalStorageProvider : IStorageProvider
                 File.Delete(tempPath);
             }
 
-            await using var fs = new FileStream(tempPath, FileMode.Create, FileAccess.Write, FileShare.None, buffer.Length, true);
-
-            while ((read = await stream.ReadAsync(buffer.AsMemory(0, buffer.Length), cancellationToken)) > 0)
+            await using (var fs = new FileStream(tempPath, FileMode.Create, FileAccess.Write, FileShare.None, buffer.Length, true))
             {
-                await fs.WriteAsync(buffer.AsMemory(0, read), cancellationToken);
-                written += read;
-                int pct = total == 0 ? 100 : (int)((double)written / total * 100);
-                if (pct > lastPct)
+                while ((read = await stream.ReadAsync(buffer.AsMemory(0, buffer.Length), cancellationToken)) > 0)
                 {
-                    lastPct = pct;
-                    onProgress?.Invoke(pct);
+                    await fs.WriteAsync(buffer.AsMemory(0, read), cancellationToken);
+                    written += read;
+                    int pct = total == 0 ? 100 : (int)((double)written / total * 100);
+                    if (pct > lastPct)
+                    {
+                        lastPct = pct;
+                        onProgress?.Invoke(pct);
+                    }
                 }
-            }
 
-            await fs.FlushAsync(cancellationToken);
+                await fs.FlushAsync(cancellationToken);
+            }
 
             if (File.Exists(fullPath))
             {
