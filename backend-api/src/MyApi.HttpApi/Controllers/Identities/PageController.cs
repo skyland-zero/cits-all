@@ -36,13 +36,13 @@ public class PageController : IdentityBaseApiController
         await _identityPageAppService.CreateAsync(input);
     }
 
-    [HttpPut("{id}")]
+    [HttpPost("{id}/update")]
     public async Task UpdateAsync(Guid id, IdentityPageCreateUpdateDto input)
     {
         await _identityPageAppService.UpdateAsync(id, input);
     }
 
-    [HttpDelete("{id}")]
+    [HttpPost("{id}/delete")]
     public async Task DeleteAsync(Guid id)
     {
         await _identityPageAppService.DeleteAsync(id);

@@ -21,14 +21,14 @@ export async function addApi(data: any) {
  * 编辑
  */
 export async function editApi(id: string, data: any) {
-  return requestClient.put<any>(`/workorder/work-order/${id}`, data);
+  return requestClient.post<any>(`/workorder/work-order/${id}/update`, data);
 }
 
 /**
  * 删除
  */
 export async function deleteApi(id: string) {
-  return requestClient.delete<any>(`/workorder/work-order/${id}`);
+  return requestClient.post<any>(`/workorder/work-order/${id}/delete`);
 }
 
 /**

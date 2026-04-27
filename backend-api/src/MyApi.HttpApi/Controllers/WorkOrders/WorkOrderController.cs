@@ -52,7 +52,7 @@ public class WorkOrderController : WorkOrderBaseApiController
     /// <summary>
     /// 更新工单
     /// </summary>
-    [HttpPut("{id}")]
+    [HttpPost("{id}/update")]
     public async Task UpdateAsync(Guid id, [FromBody] WorkOrderUpdateDto input)
     {
         await _workOrderService.UpdateAsync(id, input);
@@ -61,7 +61,7 @@ public class WorkOrderController : WorkOrderBaseApiController
     /// <summary>
     /// 删除工单
     /// </summary>
-    [HttpDelete("{id}")]
+    [HttpPost("{id}/delete")]
     public async Task DeleteAsync(Guid id)
     {
         await _workOrderService.DeleteAsync(id);

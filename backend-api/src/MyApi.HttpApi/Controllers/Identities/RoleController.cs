@@ -35,13 +35,13 @@ public class RoleController : IdentityBaseApiController
         await _roleAppService.CreateAsync(input);
     }
 
-    [HttpPut("{id}")]
+    [HttpPost("{id}/update")]
     public async Task UpdateAsync(Guid id, RoleCreateUpdateDto input)
     {
         await _roleAppService.UpdateAsync(id, input);
     }
 
-    [HttpDelete("{id}")]
+    [HttpPost("{id}/delete")]
     public async Task DeleteAsync(Guid id)
     {
         await _roleAppService.DeleteAsync(id);
@@ -53,7 +53,7 @@ public class RoleController : IdentityBaseApiController
         return await _roleAppService.GetMenuIdsAsync(id);
     }
 
-    [HttpPut("{id}/menus")]
+    [HttpPost("{id}/menus")]
     public async Task UpdateMenusAsync(Guid id, RoleMenusUpdateDto input)
     {
         await _roleAppService.UpdateMenusAsync(id, input);

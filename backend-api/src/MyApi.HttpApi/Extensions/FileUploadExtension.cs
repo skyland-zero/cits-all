@@ -8,6 +8,7 @@ public static class FileUploadExtension
     public static void ConfigureUpload(this IServiceCollection services, IConfiguration configuration)
     {
         services.AddSingleton<IStorageProvider, LocalStorageProvider>();
+        services.AddSingleton<FileValidationService>();
         services.AddSignalR();
     }
 

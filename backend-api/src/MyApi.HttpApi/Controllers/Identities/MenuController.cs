@@ -47,13 +47,13 @@ public class MenuController : IdentityBaseApiController
         await _identityMenuAppService.MultiCreateAsync(inputs);
     }
 
-    [HttpPut("{id}")]
+    [HttpPost("{id}/update")]
     public async Task UpdateAsync(Guid id, IdentityMenuUpdateDto input)
     {
         await _identityMenuAppService.UpdateAsync(id, input);
     }
 
-    [HttpDelete("{id}")]
+    [HttpPost("{id}/delete")]
     public async Task DeleteAsync(Guid id)
     {
         await _identityMenuAppService.DeleteAsync(id);

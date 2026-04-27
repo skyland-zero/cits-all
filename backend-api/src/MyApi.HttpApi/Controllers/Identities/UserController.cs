@@ -35,13 +35,13 @@ public class UserController : IdentityBaseApiController
         await _userAppService.CreateAsync(input);
     }
 
-    [HttpPut("{id}")]
+    [HttpPost("{id}/update")]
     public async Task UpdateAsync(Guid id, UserUpdateDto input)
     {
         await _userAppService.UpdateAsync(id, input);
     }
 
-    [HttpDelete("{id}")]
+    [HttpPost("{id}/delete")]
     public async Task DeleteAsync(Guid id)
     {
         await _userAppService.DeleteAsync(id);

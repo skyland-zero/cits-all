@@ -35,13 +35,13 @@ public class OrganizationUnitController : IdentityBaseApiController
         await _organizationUnitService.CreateAsync(input);
     }
 
-    [HttpPut("{id}")]
+    [HttpPost("{id}/update")]
     public async Task UpdateAsync(Guid id, OrganizationUnitCreateUpdateDto input)
     {
         await _organizationUnitService.UpdateAsync(id, input);
     }
 
-    [HttpDelete]
+    [HttpPost("{id}/delete")]
     public async Task DeleteAsync(Guid id)
     {
         await _organizationUnitService.DeleteAsync(id);

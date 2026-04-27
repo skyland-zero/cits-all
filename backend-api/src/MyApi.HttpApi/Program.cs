@@ -5,6 +5,7 @@ using Cits.LoginLogs;
 using Cits.Permissions;
 using Microsoft.AspNetCore.Mvc.ApplicationModels;
 using MyApi.Domain.DomainServices.CorpWx;
+using MyApi.Domain.DomainServices.WorkOrders;
 using MyApi.Application.Identities;
 using MyApi.HttpApi.Extensions;
 using Serilog;
@@ -46,10 +47,12 @@ builder.Services.AddLoginLog();
 builder.Services.ConfigureUpload(builder.Configuration);
 
 builder.Services.AddFreeRedis(builder.Configuration);
+builder.Services.AddSingleton<PdfAntiCounterfeitService>();
+builder.Services.AddSingleton<WorkOrderPdfGenerator>();
 
 
 builder.Services.AddScalar();
-// builder.Services.AddCorpWxService(builder.Configuration); //企业微信相关注册（不需要了）
+builder.Services.AddCorpWxService(builder.Configuration);
 
 
 //业务服务
