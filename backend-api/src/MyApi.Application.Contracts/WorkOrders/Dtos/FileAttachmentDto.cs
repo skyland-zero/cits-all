@@ -36,4 +36,9 @@ public class FileAttachmentDto : EntityDto<Guid>
     /// 拼接后的完整访问 URL (可选，根据 StorageProvider 决定)
     /// </summary>
     public string? Url { get; set; }
+
+    /// <summary>
+    /// 下载 URL。
+    /// </summary>
+    public string? DownloadUrl { get; set; }
 }

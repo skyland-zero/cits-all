@@ -31,6 +31,7 @@ import {
   addApi,
   deleteApi,
   editApi,
+  getApi,
   pageApi,
 } from '#/api/workorder/work-orders';
 import { MyContainer } from '#/components';
@@ -115,10 +116,26 @@ const onAdd = () => {
  * 点击编辑
  * @param row
  */
-const onEdit = (row: any) => {
+const loadCurrentRow = async (id: string) => {
+  loading.value = true;
+  try {
+    return await getApi(id);
+  } catch (error) {
+    console.error(error);
+    return null;
+  } finally {
+    loading.value = false;
+  }
+};
+
+const onEdit = async (row: any) => {
   actionType.value = actionEnum.edit;
   dialogTitle.value = '编辑工单';
-  currentRow.value = row;
+  const detail = await loadCurrentRow(row.id);
+  if (!detail) {
+    return;
+  }
+  currentRow.value = detail;
   dialogFormVisible.value = true;
 };
 
@@ -126,8 +143,12 @@ const onEdit = (row: any) => {
  * 查看详情
  * @param row
  */
-const onView = (row: any) => {
-  currentRow.value = row;
+const onView = async (row: any) => {
+  const detail = await loadCurrentRow(row.id);
+  if (!detail) {
+    return;
+  }
+  currentRow.value = detail;
   detailVisible.value = true;
 };
 

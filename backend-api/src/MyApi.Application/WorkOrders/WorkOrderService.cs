@@ -4,9 +4,12 @@ using Cits.IdGenerator;
 using Mapster;
 using MyApi.Application.Contracts.WorkOrders;
 using MyApi.Application.Contracts.WorkOrders.Dtos;
+using MyApi.Domain.DomainServices.FileUpload;
+using MyApi.Domain.FileUpload;
 using MyApi.Domain.DomainServices.WorkOrders;
 using MyApi.Domain.Shared.WorkOrders;
 using MyApi.Domain.WorkOrders;
+using System.Text.Json;
 
 namespace MyApi.Application.WorkOrders;
 
@@ -18,14 +21,17 @@ public class WorkOrderService : IWorkOrderService
     private readonly IFreeSql _fsql;
     private readonly IIdGenerator _idGenerator;
     private readonly ICurrentUser _currentUser;
+    private readonly FileAccessSignatureService _fileAccessSignatureService;
     private readonly WorkOrderNoDomainService _workOrderNoDomainService;
 
-    public WorkOrderService(IFreeSql fsql, IIdGenerator idGenerator, ICurrentUser currentUser, WorkOrderNoDomainService workOrderNoDomainService)
+    public WorkOrderService(IFreeSql fsql, IIdGenerator idGenerator, ICurrentUser currentUser,
+        WorkOrderNoDomainService workOrderNoDomainService, FileAccessSignatureService fileAccessSignatureService)
     {
         _fsql = fsql;
         _idGenerator = idGenerator;
         _currentUser = currentUser;
         _workOrderNoDomainService = workOrderNoDomainService;
+        _fileAccessSignatureService = fileAccessSignatureService;
     }
 
     /// <summary>
@@ -43,16 +49,19 @@ public class WorkOrderService : IWorkOrderService
         {
             try
             {
-                // 假设存储格式为 JSON 数组: [{"id":"...","name":"..."}, ...]
-                var attachInfos = System.Text.Json.JsonSerializer.Deserialize<List<AttachmentInfo>>(entity.Attachments);
-                if (attachInfos != null && attachInfos.Count > 0)
+                var ids = ParseAttachmentIds(entity.Attachments);
+                if (ids.Count > 0)
                 {
-                    var ids = attachInfos.Select(x => x.Id).ToList();
-                    var attachments = await _fsql.Select<MyApi.Domain.FileUpload.FileAttachment>()
+                    var attachments = await _fsql.Select<FileAttachment>()
                         .Where(x => ids.Contains(x.Id))
                         .ToListAsync();
 
-                    dto.AttachmentList = attachments.Adapt<List<FileAttachmentDto>>();
+                    dto.AttachmentList = ids
+                        .Select(id => attachments.FirstOrDefault(x => x.Id == id))
+                        .Where(x => x != null)
+                        .Select(x => x!)
+                        .Select(ToAttachmentDto)
+                        .ToList();
                 }
             }
             catch
@@ -107,6 +116,7 @@ public class WorkOrderService : IWorkOrderService
         entity.ProcessorId = Guid.Empty; // 初始无处理人
 
         await _fsql.Insert(entity).ExecuteAffrowsAsync();
+        await MarkAttachmentsAsPermanentAsync(input.Attachments);
 
         return entity.Id;
     }
@@ -125,9 +135,12 @@ public class WorkOrderService : IWorkOrderService
             throw new Exception("只有草稿状态的工单可以修改");
         }
 
+        var removedAttachmentIds = GetRemovedAttachmentIds(entity.Attachments, input.Attachments);
         input.Adapt(entity);
 
         await _fsql.Update<WorkOrder>().SetSource(entity).ExecuteAffrowsAsync();
+        await MarkAttachmentsAsPermanentAsync(input.Attachments);
+        await RevokeAttachmentsAsync(removedAttachmentIds);
     }
 
     /// <summary>
@@ -214,6 +227,104 @@ public class WorkOrderService : IWorkOrderService
             throw new Exception("只有草稿或作废状态的工单可以删除");
         }
 
+        await RevokeAttachmentsAsync(ParseAttachmentIds(entity.Attachments));
         await _fsql.Delete<WorkOrder>().Where(x => x.Id == id).ExecuteAffrowsAsync();
+    }
+
+    private FileAttachmentDto ToAttachmentDto(FileAttachment attachment)
+    {
+        return new FileAttachmentDto
+        {
+            Id = attachment.Id,
+            OriginalName = attachment.OriginalName,
+            StorageName = attachment.StorageName,
+            Extension = attachment.Extension,
+            FileSize = attachment.FileSize,
+            RelativePath = attachment.RelativePath,
+            Url = _fileAccessSignatureService.CreatePreviewUrl(attachment.Id, attachment.AccessVersion),
+            DownloadUrl = _fileAccessSignatureService.CreateDownloadUrl(attachment.Id, attachment.AccessVersion),
+        };
+    }
+
+    private async Task MarkAttachmentsAsPermanentAsync(string? attachments)
+    {
+        var ids = ParseAttachmentIds(attachments);
+        if (ids.Count == 0)
+        {
+            return;
+        }
+
+        var dbAttachments = await _fsql.Select<FileAttachment>()
+            .Where(x => ids.Contains(x.Id))
+            .ToListAsync();
+        if (dbAttachments.Count != ids.Count)
+        {
+            throw new UserFriendlyException("存在无效的附件标识，请重新上传附件");
+        }
+
+        foreach (var attachment in dbAttachments)
+        {
+            attachment.IsPermanent = true;
+        }
+
+        await _fsql.Update<FileAttachment>().SetSource(dbAttachments).ExecuteAffrowsAsync();
+    }
+
+    private List<Guid> GetRemovedAttachmentIds(string? previousAttachments, string? currentAttachments)
+    {
+        var previousIds = ParseAttachmentIds(previousAttachments);
+        if (previousIds.Count == 0)
+        {
+            return [];
+        }
+
+        var currentIds = ParseAttachmentIds(currentAttachments);
+        return previousIds.Except(currentIds).ToList();
+    }
+
+    private async Task RevokeAttachmentsAsync(List<Guid> attachmentIds)
+    {
+        if (attachmentIds.Count == 0)
+        {
+            return;
+        }
+
+        var dbAttachments = await _fsql.Select<FileAttachment>()
+            .Where(x => attachmentIds.Contains(x.Id))
+            .ToListAsync();
+        if (dbAttachments.Count == 0)
+        {
+            return;
+        }
+
+        foreach (var attachment in dbAttachments)
+        {
+            attachment.IsPermanent = false;
+            attachment.AccessVersion += 1;
+        }
+
+        await _fsql.Update<FileAttachment>().SetSource(dbAttachments).ExecuteAffrowsAsync();
+    }
+
+    private static List<Guid> ParseAttachmentIds(string? attachments)
+    {
+        if (string.IsNullOrWhiteSpace(attachments))
+        {
+            return [];
+        }
+
+        try
+        {
+            var attachInfos = JsonSerializer.Deserialize<List<AttachmentInfo>>(attachments);
+            return attachInfos?
+                .Select(x => x.Id)
+                .Where(x => x != Guid.Empty)
+                .Distinct()
+                .ToList() ?? [];
+        }
+        catch (JsonException ex)
+        {
+            throw new UserFriendlyException("附件数据格式不正确", ex);
+        }
     }
 }

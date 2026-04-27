@@ -56,4 +56,9 @@ public class FileAttachment : EntityBase
     /// 是否正式转正（已关联业务数据）
     /// </summary>
     public bool IsPermanent { get; set; }
+
+    /// <summary>
+    /// 文件访问签名版本号，用于撤销历史签名链接。
+    /// </summary>
+    public int AccessVersion { get; set; } = 1;
 }

@@ -1,6 +1,9 @@
 ﻿using Cits;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
+using Microsoft.Extensions.Options;
+using MyApi.Application.Contracts.WorkOrders.Dtos;
 using MyApi.Domain.DomainServices.FileUpload;
 using MyApi.Domain.DomainServices.FileUpload.Dto;
 using MyApi.Domain.FileUpload;
@@ -11,18 +14,36 @@ namespace MyApi.HttpApi.Controllers.FileUpload;
 [Route("api/basic/upload/[controller]")]
 public class UploadController : BaseApiController
 {
+    private readonly ICurrentUser _currentUser;
     private readonly IStorageProvider _storage;
     private readonly IFreeSql _fsql;
+    private readonly FileAccessSignatureService _fileAccessSignatureService;
+    private readonly IOptionsMonitor<UploadOptions> _uploadOptions;
     private readonly FileValidationService _validator;
     private readonly IHubContext<UploadHub> _hub;
 
-    public UploadController(IStorageProvider storage, IFreeSql fsql, FileValidationService validator,
-        IHubContext<UploadHub> hub)
+    public UploadController(ICurrentUser currentUser, IStorageProvider storage, IFreeSql fsql,
+        FileValidationService validator, IHubContext<UploadHub> hub,
+        FileAccessSignatureService fileAccessSignatureService, IOptionsMonitor<UploadOptions> uploadOptions)
     {
+        _currentUser = currentUser;
         _storage = storage;
         _fsql = fsql;
         _validator = validator;
         _hub = hub;
+        _fileAccessSignatureService = fileAccessSignatureService;
+        _uploadOptions = uploadOptions;
+    }
+
+    [HttpGet("settings")]
+    public IActionResult GetSettings()
+    {
+        return Ok(new
+        {
+            maxConcurrentUploads = _uploadOptions.CurrentValue.Client.MaxConcurrentUploads,
+            signalREnabled = _uploadOptions.CurrentValue.SignalR.Enabled,
+            hubUrl = "/hub/upload"
+        });
     }
 
     /// <summary>
@@ -30,9 +51,11 @@ public class UploadController : BaseApiController
     /// </summary>
     /// <param name="file">文件对象</param>
     /// <param name="connectionId">SignalR 连接 ID (从 Header 获取)</param>
+    /// <param name="uploadUid">前端文件唯一标识</param>
     [HttpPost("single")]
-    public async Task UploadSingle(IFormFile file,
-        [FromHeader(Name = "X-Connection-Id")] string connectionId)
+    public async Task<FileAttachmentDto> UploadSingle(IFormFile file,
+        [FromHeader(Name = "X-Connection-Id")] string? connectionId,
+        [FromHeader(Name = "X-Upload-Uid")] string? uploadUid)
     {
         // 1. 安全校验
         var (isValid, msg) = await _validator.ValidateAsync(file);
@@ -55,14 +78,18 @@ public class UploadController : BaseApiController
             rootIdentifier = await _storage.SaveAsync(stream, storageName, file.ContentType, (percent) =>
             {
                 // 如果前端传了 ConnectionId，则通过 SignalR 推送进度
-                if (!string.IsNullOrEmpty(connectionId))
+                if (_uploadOptions.CurrentValue.SignalR.Enabled && !string.IsNullOrEmpty(connectionId) && !string.IsNullOrEmpty(uploadUid))
                 {
                     // Fire-and-forget: 不要 await，避免阻塞文件写入流
-                    _ = _hub.Clients.Client(connectionId).SendAsync("UploadProgress", percent);
+                    _ = _hub.Clients.Client(connectionId).SendAsync("UploadProgress", new UploadProgressMessage(uploadUid, percent));
                 }
-            });
+            }, HttpContext.RequestAborted);
         }
-        catch (Exception ex)
+        catch (OperationCanceledException)
+        {
+            throw new UserFriendlyException("上传已取消");
+        }
+        catch (Exception)
         {
             throw new UserFriendlyException("存储失败");
         }
@@ -88,6 +115,65 @@ public class UploadController : BaseApiController
         };
 
         await _fsql.Insert(attachment).ExecuteAffrowsAsync();
+
+        return CreateDto(attachment);
+    }
+
+    [AllowAnonymous]
+    [HttpGet("access/preview")]
+    public async Task<IActionResult> Preview([FromQuery] string token)
+    {
+        var file = await ResolveFileAsync(token, isPreview: true);
+        if (file is null)
+        {
+            return NotFound("附件不存在或访问链接无效");
+        }
+
+        var stream = await _storage.GetStreamAsync(file.RootIdentifier, file.RelativePath);
+        if (stream is null) return NotFound("附件文件不存在");
+
+        Response.Headers.ContentDisposition = $"inline; filename*=UTF-8''{Uri.EscapeDataString(file.OriginalName)}";
+        return File(stream, GetContentType(file));
+    }
+
+    [AllowAnonymous]
+    [HttpGet("access/download")]
+    public async Task<IActionResult> Download([FromQuery] string token)
+    {
+        var file = await ResolveFileAsync(token, isPreview: false);
+        if (file is null)
+        {
+            return NotFound("附件不存在或访问链接无效");
+        }
+
+        var stream = await _storage.GetStreamAsync(file.RootIdentifier, file.RelativePath);
+        if (stream is null) return NotFound("附件文件不存在");
+
+        return File(stream, GetContentType(file), file.OriginalName);
+    }
+
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> DeleteTemporary(Guid id)
+    {
+        var file = await _fsql.Select<FileAttachment>().Where(x => x.Id == id).FirstAsync();
+        if (file == null)
+        {
+            return NoContent();
+        }
+
+        if (file.IsPermanent)
+        {
+            throw new UserFriendlyException("正式附件不允许通过临时删除接口移除");
+        }
+
+        if (_currentUser.Id != Guid.Empty && file.CreatorUserId != Guid.Empty && file.CreatorUserId != _currentUser.Id)
+        {
+            throw new UserFriendlyException("无权删除该附件");
+        }
+
+        await _storage.DeleteAsync(file.RootIdentifier, file.RelativePath);
+        await _fsql.Delete<FileAttachment>().Where(x => x.Id == id).ExecuteAffrowsAsync();
+        return NoContent();
     }
 
     // 1. 检查秒传/断点
@@ -136,6 +222,50 @@ public class UploadController : BaseApiController
         };
 
         await _fsql.Insert(file).ExecuteAffrowsAsync();
-        return Ok(file);
+        return Ok(CreateDto(file));
     }
+
+    private FileAttachmentDto CreateDto(FileAttachment file)
+    {
+        return new FileAttachmentDto
+        {
+            Id = file.Id,
+            OriginalName = file.OriginalName,
+            StorageName = file.StorageName,
+            Extension = file.Extension,
+            FileSize = file.FileSize,
+            RelativePath = file.RelativePath,
+            Url = _fileAccessSignatureService.CreatePreviewUrl(file.Id, file.AccessVersion),
+            DownloadUrl = _fileAccessSignatureService.CreateDownloadUrl(file.Id, file.AccessVersion),
+        };
+    }
+
+    private static string GetContentType(FileAttachment file)
+    {
+        return string.IsNullOrWhiteSpace(file.ContentType)
+            ? "application/octet-stream"
+            : file.ContentType;
+    }
+
+    private async Task<FileAttachment?> ResolveFileAsync(string token, bool isPreview)
+    {
+        FileAccessPayload payload;
+        var valid = isPreview
+            ? _fileAccessSignatureService.TryValidatePreviewToken(token, out payload)
+            : _fileAccessSignatureService.TryValidateDownloadToken(token, out payload);
+        if (!valid)
+        {
+            return null;
+        }
+
+        var file = await _fsql.Select<FileAttachment>().Where(x => x.Id == payload.FileId).FirstAsync();
+        if (file == null || file.AccessVersion != payload.AccessVersion)
+        {
+            return null;
+        }
+
+        return file;
+    }
+
+    private sealed record UploadProgressMessage(string UploadUid, int Percent);
 }
