@@ -36,6 +36,16 @@ public class LoginLog : Entity
     public bool Status { get; set; }
 
     /// <summary>
+    /// 登录地点
+    /// </summary>
+    public string? Location { get; set; }
+
+    /// <summary>
+    /// 操作信息
+    /// </summary>
+    public string? Message { get; set; }
+
+    /// <summary>
     /// 用户Id
     /// </summary>
     public string? UserId { get; set; }

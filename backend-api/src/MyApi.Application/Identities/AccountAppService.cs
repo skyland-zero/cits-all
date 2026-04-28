@@ -42,6 +42,7 @@ public class AccountAppService : IAccountAppService
         var lockResult = await _userManager.IsLockedOutAsync(input.UserName);
         if (lockResult.Item1)
         {
+            log.Message = lockResult.Item2;
             await _loginLogWriter.WriteAsync(log);
             throw new UserFriendlyException(lockResult.Item2);
         }
@@ -50,6 +51,7 @@ public class AccountAppService : IAccountAppService
         if (user == null)
         {
             var last = await _userManager.AccessFailedAsync(input.UserName);
+            log.Message = $"用户名或密码错误，剩余尝试次数：{last}";
             await _loginLogWriter.WriteAsync(log);
             throw new UserFriendlyException($"用户名或密码错误，剩余尝试次数：{last}，之后将锁定账号10分钟。");
         }
@@ -60,11 +62,13 @@ public class AccountAppService : IAccountAppService
         if (!PasswordHasher.VerifyPassword(user.PasswordHash, input.Password!))
         {
             var last = await _userManager.AccessFailedAsync(input.UserName);
+            log.Message = $"用户名或密码错误，剩余尝试次数：{last}";
             await _loginLogWriter.WriteAsync(log);
             throw new UserFriendlyException($"用户名或密码错误，剩余尝试次数：{last}，之后将锁定账号10分钟。");
         }
 
         log.Status = true;
+        log.Message = "登录成功";
         await _loginLogWriter.WriteAsync(log);
         await _userManager.ResetAccessFailedCountAsync(input.UserName);
         return await BuildLoginOutputAsync(user);

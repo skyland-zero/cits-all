@@ -12,6 +12,7 @@ public class LoginLogService : BackgroundService
     private readonly IFreeSql _freeSql;
     private readonly IHttpUserAgentParserProvider _parser;
     private readonly ILoginLogWriter _logWriter;
+    private readonly IIpLocationService _ipLocationService;
     private readonly ILogger<LoginLogService> _logger;
 
     private const int DefaultBatchSize = 100;
@@ -23,12 +24,13 @@ public class LoginLogService : BackgroundService
 
 
     public LoginLogService(IFreeSql freeSql, ILoginLogWriter logWriter, ILogger<LoginLogService> logger,
-        IHttpUserAgentParserProvider parserProvider)
+        IHttpUserAgentParserProvider parserProvider, IIpLocationService ipLocationService)
     {
         _freeSql = freeSql;
         _logWriter = logWriter;
         _logger = logger;
         _parser = parserProvider;
+        _ipLocationService = ipLocationService;
 
         _batchSize = DefaultBatchSize;
         _flushInterval = 10 * 1000;
@@ -67,6 +69,11 @@ public class LoginLogService : BackgroundService
                         logEntry.Os = info.Platform?.PlatformType.ToString();
                         logEntry.Device = info.MobileDeviceType;
                         logEntry.BrowserInfo = info.Version;
+                    }
+
+                    if (!string.IsNullOrWhiteSpace(logEntry.IP))
+                    {
+                        logEntry.Location = _ipLocationService.Search(logEntry.IP);
                     }
 
                     _batch.Add(logEntry);

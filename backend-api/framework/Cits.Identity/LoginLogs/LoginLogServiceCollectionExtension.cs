@@ -9,6 +9,7 @@ public static class LoginLogServiceCollectionExtension
     public static IServiceCollection AddLoginLog(this IServiceCollection services)
     {
         services.AddSingleton<ILoginLogWriter, LoginLogWriter>();
+        services.AddSingleton<IIpLocationService, IpLocationService>();
 
         services.AddHostedService<LoginLogService>();
         // services.AddHostedService<LoginLogUaParseService>();

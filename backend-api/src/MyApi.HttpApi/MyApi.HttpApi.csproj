@@ -7,6 +7,12 @@
     </PropertyGroup>
 
     <ItemGroup>
+      <None Update="Resources\**\*">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </None>
+    </ItemGroup>
+
+    <ItemGroup>
         <PackageReference Include="FreeRedis" Version="1.5.5" />
         <PackageReference Include="FreeSql.Provider.PostgreSQL" Version="3.5.304" />
         <PackageReference Include="FreeSql.Provider.Sqlite" Version="3.5.307" />
