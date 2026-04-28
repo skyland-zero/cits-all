@@ -138,9 +138,25 @@ Run `pnpm commit` (frontend) for interactive helper.
 cits-all/
 ├── frontend-pc/              # Vue frontend
 │   ├── apps/                # web-antd, web-ele, web-naive, web-tdesign
-│   ├── packages/             # effects, stores, utils, etc.
-│   └── internal/             # configs
-└── backend-api/              # .NET backend
-    ├── src/                  # Application modules
-    └── framework/            # Base framework
-```
+
+---
+
+## Feature Architecture: Server Monitoring
+
+### 1. Architecture Overview
+- **Pattern**: Lightweight HTTP Polling + Standardized Health Checks.
+- **Performance**: High priority. Caching is mandatory for hardware metrics reading to avoid direct IO/Process overhead per request.
+
+### 2. Backend Implementation (.NET 10)
+- **Controller**: Use a dedicated `MonitorController` returning aggregated JSON status.
+- **Dependencies**: Monitor PostgreSQL connectivity via `IFreeSql` and Redis via `RedisClient`.
+- **Caching**: Implement `IMemoryCache` with a 3-second expiration for the server info endpoint to prevent performance degradation from high-frequency polling.
+
+### 3. Frontend Implementation (frontend-pc-v56\apps\web-ele)
+- **Location**: Views are implemented in `src/views/monitor/server/index.vue`.
+- **Auto-Refresh**: Use `@vueuse/core` (`useIntervalFn`) for periodic data fetching (default 5s).
+- **Visualization**: 
+  - Use ECharts for dynamic performance tracking (CPU/Memory).
+  - Use `el-progress` for resource distribution (Disk).
+  - Use `el-tag` for real-time service status indicators.
+

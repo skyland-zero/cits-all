@@ -122,6 +122,7 @@ public class SystemDataSeedContributor : BackgroundService
             new() { Id = Guid.Parse("f6e804b2-0ea7-e13a-7787-b03c1b505207"), Name = "角色管理", RouteName = "Roles", Path = "permission/roles/index" },
             new() { Id = Guid.Parse("f6e804b2-0ea7-e13a-7787-b03c1b505208"), Name = "部门管理", RouteName = "Organizations", Path = "permission/organizations/index" },
             new() { Id = Guid.Parse("f6e804b2-0ea7-e13a-7787-b03c1b505209"), Name = "菜单管理", RouteName = "Menus", Path = "permission/menus/index" },
+            new() { Id = Guid.Parse("f6e804b2-0ea7-e13a-7787-b03c1b505210"), Name = "服务器监控", RouteName = "ServerMonitor", Path = "monitor/server/index" },
         };
 
         foreach (var page in pages)
@@ -299,6 +300,30 @@ public class SystemDataSeedContributor : BackgroundService
                 Level = 2,
                 Order = 1,
                 PageId = Guid.Parse("f6e804b2-0ea7-e13a-7787-b03c1b505203")
+            },
+            // Group: 系统监控
+            new()
+            {
+                Id = Guid.Parse("f6e804b2-0ea7-e13a-7787-b03c1b505140"),
+                Name = "系统监控",
+                RouteName = "Monitor",
+                Path = "/monitor",
+                Icon = "lucide:monitor",
+                Type = IdentityMenuType.Menu,
+                Order = 80,
+                Level = 1
+            },
+            new()
+            {
+                Id = Guid.Parse("f6e804b2-0ea7-e13a-7787-b03c1b505141"),
+                ParentId = Guid.Parse("f6e804b2-0ea7-e13a-7787-b03c1b505140"),
+                Name = "服务器监控",
+                Path = "/monitor/server",
+                Icon = "lucide:cpu",
+                Type = IdentityMenuType.Menu,
+                Level = 2,
+                Order = 1,
+                PageId = Guid.Parse("f6e804b2-0ea7-e13a-7787-b03c1b505210")
             },
 
             // 权限点示例 (以角色管理为例)

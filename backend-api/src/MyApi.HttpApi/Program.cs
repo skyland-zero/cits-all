@@ -21,13 +21,16 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 //基础服务
+builder.Services.AddMemoryCache();
 builder.Services.AddSerilogService(builder.Configuration);
 builder.Services.AddIdGenerator();
 builder.Services.ConfigureHybridCache(builder.Configuration);
 builder.Services.AddScoped<GlobalExceptionFilter>();
+builder.Services.AddScoped<OnlineUserFilter>();
 builder.Services.AddControllers(options =>
 {
     options.Filters.Add<GlobalExceptionFilter>();
+    options.Filters.Add<OnlineUserFilter>();
     options.Conventions.Add(new RouteTokenTransformerConvention(new SlugifyParameterTransformer())); //路由转换为小写加下划线格式
 }).AddJsonOptions(options =>
 {
