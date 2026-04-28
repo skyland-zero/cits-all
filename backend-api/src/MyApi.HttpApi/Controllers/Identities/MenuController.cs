@@ -1,5 +1,6 @@
 ﻿using Cits;
 using Cits.Dtos;
+using Cits.OperationLogs;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MyApi.Application.Identities;
@@ -8,6 +9,7 @@ using MyApi.Application.Identities.Dto;
 namespace MyApi.HttpApi.Controllers.Identities;
 
 [Authorize]
+[OperationLog(OperationLogModules.Menu)]
 public class MenuController : IdentityBaseApiController
 {
     private readonly IIdentityMenuAppService _identityMenuAppService;
@@ -18,18 +20,21 @@ public class MenuController : IdentityBaseApiController
     }
 
     [HttpGet("{id}")]
+    [OperationLog(OperationType = OperationLogActions.Detail)]
     public async Task<IdentityMenuDto> GetAsync(Guid id)
     {
         return await _identityMenuAppService.GetAsync(id);
     }
 
     [HttpGet]
+    [OperationLog(OperationType = OperationLogActions.List)]
     public async Task<PagedResultDto<IdentityMenuDto>> GetListAsync([FromQuery]GetIdentityMenusInput input)
     {
         return await _identityMenuAppService.GetListAsync(input);
     }
 
     [HttpGet("lite-list")]
+    [OperationLog(OperationType = OperationLogActions.List)]
     public async Task<PagedResultDto<IdentityMenuLiteDto>> GetLiteListAsync([FromQuery]GetIdentityMenusInput input)
     {
         return await _identityMenuAppService.GetLiteListAsync(input);
@@ -42,6 +47,7 @@ public class MenuController : IdentityBaseApiController
     }
 
     [HttpPost("multi-create")]
+    [OperationLog(OperationType = OperationLogActions.BatchCreate)]
     public async Task MultiCreateAsync(List<IdentityMenuCreateDto> inputs)
     {
         await _identityMenuAppService.MultiCreateAsync(inputs);

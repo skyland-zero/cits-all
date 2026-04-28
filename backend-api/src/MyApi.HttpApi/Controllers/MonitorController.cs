@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using Cits;
+using Cits.OperationLogs;
 using FreeRedis;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -12,6 +13,7 @@ namespace MyApi.HttpApi.Controllers;
 /// 服务监控接口
 /// </summary>
 [AllowAnonymous] // 允许匿名访问监控信息，或者根据需要添加特定权限 [Authorize]
+[SkipOperationLog]
 public class MonitorController : BaseApiController
 {
     private readonly IFreeSql _fsql;

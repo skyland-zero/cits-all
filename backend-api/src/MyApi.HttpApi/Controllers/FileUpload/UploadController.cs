@@ -1,4 +1,5 @@
 ﻿using Cits;
+using Cits.OperationLogs;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
@@ -13,6 +14,7 @@ using MyApi.HttpApi.Hubs;
 namespace MyApi.HttpApi.Controllers.FileUpload;
 
 [Route("api/basic/upload/[controller]")]
+[OperationLog(OperationLogModules.Upload)]
 public class UploadController : BaseApiController
 {
     private readonly ICurrentUser _currentUser;
@@ -40,6 +42,7 @@ public class UploadController : BaseApiController
     }
 
     [HttpGet("settings")]
+    [SkipOperationLog]
     public IActionResult GetSettings()
     {
         return Ok(new
@@ -57,6 +60,7 @@ public class UploadController : BaseApiController
     /// <param name="connectionId">SignalR 连接 ID (从 Header 获取)</param>
     /// <param name="uploadUid">前端文件唯一标识</param>
     [HttpPost("single")]
+    [OperationLog(OperationType = OperationLogActions.Upload)]
     public async Task<FileAttachmentDto> UploadSingle(IFormFile file,
         [FromHeader(Name = "X-Connection-Id")] string? connectionId,
         [FromHeader(Name = "X-Upload-Uid")] string? uploadUid)
@@ -125,6 +129,7 @@ public class UploadController : BaseApiController
     }
 
     [AllowAnonymous]
+    [SkipOperationLog]
     [HttpGet("access/preview")]
     public async Task<IActionResult> Preview([FromQuery] string token)
     {
@@ -142,6 +147,7 @@ public class UploadController : BaseApiController
     }
 
     [AllowAnonymous]
+    [SkipOperationLog]
     [HttpGet("access/download")]
     public async Task<IActionResult> Download([FromQuery] string token)
     {
@@ -158,6 +164,7 @@ public class UploadController : BaseApiController
     }
 
     [HttpDelete("{id}")]
+    [OperationLog(OperationType = OperationLogActions.Delete)]
     public async Task<IActionResult> DeleteTemporary(Guid id)
     {
         var file = await _fsql.Select<FileAttachment>().Where(x => x.Id == id).FirstAsync();
@@ -183,6 +190,7 @@ public class UploadController : BaseApiController
 
     // 1. 检查秒传/断点
     [HttpGet("check/{hash}")]
+    [OperationLog(OperationType = OperationLogActions.Check)]
     public async Task<IActionResult> Check(string hash)
     {
         // 检查秒传
@@ -197,6 +205,7 @@ public class UploadController : BaseApiController
 
     // 2. 上传分片
     [HttpPost("chunk")]
+    [SkipOperationLog]
     public async Task<IActionResult> UploadChunk([FromForm] IFormFile file, [FromForm] string hash,
         [FromForm] int index)
     {
@@ -210,6 +219,7 @@ public class UploadController : BaseApiController
 
     // 3. 合并分片
     [HttpPost("merge")]
+    [OperationLog(OperationType = OperationLogActions.Merge)]
     public async Task<IActionResult> Merge([FromBody] FileMergeDto dto)
     {
         var (root, path) = await _storage.MergeChunksAsync(dto.Hash, dto.FileName);

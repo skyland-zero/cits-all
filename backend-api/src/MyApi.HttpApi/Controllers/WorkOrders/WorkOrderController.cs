@@ -1,5 +1,6 @@
 using Cits;
 using Cits.Dtos;
+using Cits.OperationLogs;
 using Microsoft.AspNetCore.Mvc;
 using MyApi.Application.Contracts.WorkOrders;
 using MyApi.Application.Contracts.WorkOrders.Dtos;
@@ -10,6 +11,7 @@ namespace MyApi.HttpApi.Controllers.WorkOrders;
 /// <summary>
 /// 工单管理控制器
 /// </summary>
+[OperationLog(OperationLogModules.WorkOrder)]
 public class WorkOrderController : WorkOrderBaseApiController
 {
 
@@ -26,6 +28,7 @@ public class WorkOrderController : WorkOrderBaseApiController
     /// 获取工单详情
     /// </summary>
     [HttpGet("{id}")]
+    [OperationLog(OperationType = OperationLogActions.Detail)]
     public async Task<WorkOrderDto> GetAsync(Guid id)
     {
         return await _workOrderService.GetAsync(id);
@@ -35,6 +38,7 @@ public class WorkOrderController : WorkOrderBaseApiController
     /// 分页查询工单
     /// </summary>
     [HttpGet]
+    [OperationLog(OperationType = OperationLogActions.List)]
     public async Task<PagedResultDto<WorkOrderDto>> GetListAsync([FromQuery] GetWorkOrdersInput input)
     {
         return await _workOrderService.GetListAsync(input);
@@ -71,12 +75,14 @@ public class WorkOrderController : WorkOrderBaseApiController
     /// 获取工单统计数据
     /// </summary>
     [HttpGet("stats")]
+    [OperationLog(OperationType = OperationLogActions.List)]
     public async Task<WorkOrderStatsDto> GetStatsAsync()
     {
         return await _workOrderService.GetStatsAsync();
     }
 
     [HttpPost("{id}/submit")]
+    [OperationLog(OperationType = OperationLogActions.Submit)]
     public async Task<IActionResult> Submit(Guid id, [FromServices] IWorkOrderWorkflowFactory factory)
     {
         var workflow = factory.Create(id);
@@ -86,6 +92,7 @@ public class WorkOrderController : WorkOrderBaseApiController
     }
 
     [HttpPost("{id}/assign")]
+    [OperationLog(OperationType = OperationLogActions.Assign)]
     public async Task<IActionResult> Assign(Guid id, [FromBody] Guid assigneeId, [FromServices] IWorkOrderWorkflowFactory factory)
     {
         var workflow = factory.Create(id);
@@ -95,6 +102,7 @@ public class WorkOrderController : WorkOrderBaseApiController
     }
 
     [HttpPost("{id}/start")]
+    [OperationLog(OperationType = OperationLogActions.Start)]
     public async Task<IActionResult> Start(Guid id, [FromServices] IWorkOrderWorkflowFactory factory)
     {
         var workflow = factory.Create(id);
@@ -104,6 +112,7 @@ public class WorkOrderController : WorkOrderBaseApiController
     }
 
     [HttpPost("{id}/finish")]
+    [OperationLog(OperationType = OperationLogActions.Finish)]
     public async Task<IActionResult> Finish(Guid id, [FromServices] IWorkOrderWorkflowFactory factory)
     {
         var workflow = factory.Create(id);
@@ -113,6 +122,7 @@ public class WorkOrderController : WorkOrderBaseApiController
     }
 
     [HttpPost("{id}/reject")]
+    [OperationLog(OperationType = OperationLogActions.Reject)]
     public async Task<IActionResult> Reject(Guid id, [FromServices] IWorkOrderWorkflowFactory factory)
     {
         var workflow = factory.Create(id);
@@ -122,6 +132,7 @@ public class WorkOrderController : WorkOrderBaseApiController
     }
 
     [HttpPost("{id}/cancel")]
+    [OperationLog(OperationType = OperationLogActions.Cancel)]
     public async Task<IActionResult> Cancel(Guid id, [FromServices] IWorkOrderWorkflowFactory factory)
     {
         var workflow = factory.Create(id);
@@ -131,6 +142,7 @@ public class WorkOrderController : WorkOrderBaseApiController
     }
 
     [HttpPost("{id}/approve")]
+    [OperationLog(OperationType = OperationLogActions.Approve)]
     public async Task<IActionResult> Approve(Guid id, [FromServices] IWorkOrderWorkflowFactory factory)
     {
         var workflow = factory.Create(id);

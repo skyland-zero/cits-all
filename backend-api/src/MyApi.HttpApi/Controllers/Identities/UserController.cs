@@ -1,5 +1,6 @@
 ﻿using Cits;
 using Cits.Dtos;
+using Cits.OperationLogs;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MyApi.Application.Identities;
@@ -8,6 +9,7 @@ using MyApi.Application.Identities.Dto;
 namespace MyApi.HttpApi.Controllers.Identities;
 
 [Authorize]
+[OperationLog(OperationLogModules.User)]
 public class UserController : IdentityBaseApiController
 {
     private readonly IUserAppService _userAppService;
@@ -18,12 +20,14 @@ public class UserController : IdentityBaseApiController
     }
 
     [HttpGet("{id}")]
+    [OperationLog(OperationType = OperationLogActions.Detail)]
     public async Task<UserDto> GetAsync(Guid id)
     {
         return await _userAppService.GetAsync(id);
     }
 
     [HttpGet]
+    [OperationLog(OperationType = OperationLogActions.List)]
     public async Task<PagedResultDto<UserDto>> GetListAsync([FromQuery] GetUsersInput input)
     {
         return await _userAppService.GetListAsync(input);
@@ -48,6 +52,7 @@ public class UserController : IdentityBaseApiController
     }
 
     [HttpPost("reset-password/{id}")]
+    [OperationLog(OperationType = OperationLogActions.ResetPassword)]
     public async Task ResetPasswordAsync(Guid id, UserResetPasswordDto input)
     {
         await _userAppService.ResetPasswordAsync(id, input);

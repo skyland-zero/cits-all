@@ -1,5 +1,6 @@
 ﻿using Cits;
 using Cits.Dtos;
+using Cits.OperationLogs;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MyApi.Application.Identities;
@@ -8,6 +9,7 @@ using MyApi.Application.Identities.Dto;
 namespace MyApi.HttpApi.Controllers.Identities;
 
 [Authorize]
+[OperationLog(OperationLogModules.Page)]
 public class PageController : IdentityBaseApiController
 {
     private readonly IIdentityPageAppService _identityPageAppService;
@@ -19,12 +21,14 @@ public class PageController : IdentityBaseApiController
     }
 
     [HttpGet("{id}")]
+    [OperationLog(OperationType = OperationLogActions.Detail)]
     public async Task<IdentityPageDto> GetAsync(Guid id)
     {
         return await _identityPageAppService.GetAsync(id);
     }
 
     [HttpGet]
+    [OperationLog(OperationType = OperationLogActions.List)]
     public async Task<PagedResultDto<IdentityPageDto>> GetListAsync([FromQuery]GetIdentityPagesInput input)
     {
         return await _identityPageAppService.GetListAsync(input);

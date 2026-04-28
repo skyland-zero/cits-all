@@ -1,5 +1,6 @@
 ﻿using Cits;
 using Cits.Dtos;
+using Cits.OperationLogs;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MyApi.Application.Identities;
@@ -8,6 +9,7 @@ using MyApi.Application.Identities.Dto;
 namespace MyApi.HttpApi.Controllers.Identities;
 
 [Authorize]
+[OperationLog(OperationLogModules.Role)]
 public class RoleController : IdentityBaseApiController
 {
     private readonly IRoleAppService _roleAppService;
@@ -18,12 +20,14 @@ public class RoleController : IdentityBaseApiController
     }
 
     [HttpGet("{id}")]
+    [OperationLog(OperationType = OperationLogActions.Detail)]
     public async Task<RoleDto> GetAsync(Guid id)
     {
         return await _roleAppService.GetAsync(id);
     }
 
     [HttpGet]
+    [OperationLog(OperationType = OperationLogActions.List)]
     public async Task<PagedResultDto<RoleDto>> GetListAsync([FromQuery]GetRolesInput input)
     {
         return await _roleAppService.GetListAsync(input);
@@ -54,12 +58,14 @@ public class RoleController : IdentityBaseApiController
     }
 
     [HttpPost("{id}/menus")]
+    [OperationLog(OperationType = OperationLogActions.AssignMenus)]
     public async Task UpdateMenusAsync(Guid id, RoleMenusUpdateDto input)
     {
         await _roleAppService.UpdateMenusAsync(id, input);
     }
 
     [HttpGet("select")]
+    [OperationLog(OperationType = OperationLogActions.List)]
     public async Task<ListResultDto<GuidSelectDto>> GetSelectAsync()
     {
         return await _roleAppService.GetSelectAsync();

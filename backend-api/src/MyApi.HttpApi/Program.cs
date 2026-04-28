@@ -2,6 +2,7 @@ using Cits;
 using Cits.IdGenerator;
 using Cits.Jwt;
 using Cits.LoginLogs;
+using Cits.OperationLogs;
 using Cits.Permissions;
 using Microsoft.AspNetCore.Mvc.ApplicationModels;
 using MyApi.HttpApi.Json;
@@ -27,10 +28,12 @@ builder.Services.AddIdGenerator();
 builder.Services.ConfigureHybridCache(builder.Configuration);
 builder.Services.AddScoped<GlobalExceptionFilter>();
 builder.Services.AddScoped<OnlineUserFilter>();
+builder.Services.AddScoped<OperationLogFilter>();
 builder.Services.AddControllers(options =>
 {
     options.Filters.Add<GlobalExceptionFilter>();
     options.Filters.Add<OnlineUserFilter>();
+    options.Filters.Add<OperationLogFilter>();
     options.Conventions.Add(new RouteTokenTransformerConvention(new SlugifyParameterTransformer())); //路由转换为小写加下划线格式
 }).AddJsonOptions(options =>
 {
@@ -52,6 +55,7 @@ builder.Services.AddPermission(builder.Configuration);
 builder.Services.ConfigureFreeSql(builder.Configuration);
 builder.Services.ConfigureDataSeed();
 builder.Services.AddLoginLog();
+builder.Services.AddOperationLog(builder.Configuration);
 builder.Services.ConfigureUpload(builder.Configuration);
 
 builder.Services.AddFreeRedis(builder.Configuration);
