@@ -3,7 +3,12 @@
 <script lang="ts" setup>
 import { onMounted, reactive, ref } from 'vue';
 
-import { MdiAdd, MdiContentCopy, MdiDelete, MdiEdit } from '@vben/icons';
+import {
+  CircleX as MdiDelete,
+  Copy as MdiContentCopy,
+  Plus as MdiAdd,
+  UserRoundPen as MdiEdit,
+} from '@vben/icons';
 
 import {
   ElButton,

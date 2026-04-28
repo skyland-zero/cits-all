@@ -7,7 +7,6 @@ import { useAppConfig } from '@vben/hooks';
 import { preferences } from '@vben/preferences';
 import {
   authenticateResponseInterceptor,
-  defaultResponseInterceptor,
   errorMessageResponseInterceptor,
   RequestClient,
 } from '@vben/request';
@@ -35,6 +34,7 @@ function createRequestClient(baseURL: string, options?: RequestClientOptions) {
     const accessStore = useAccessStore();
     const authStore = useAuthStore();
     accessStore.setAccessToken(null);
+    accessStore.setRefreshToken(null);
     if (
       preferences.app.loginExpiredMode === 'modal' &&
       accessStore.isAccessChecked
@@ -50,10 +50,14 @@ function createRequestClient(baseURL: string, options?: RequestClientOptions) {
    */
   async function doRefreshToken() {
     const accessStore = useAccessStore();
-    const resp = await refreshTokenApi();
-    const newToken = resp.data;
-    accessStore.setAccessToken(newToken);
-    return newToken;
+    const { accessToken, refreshToken } = await refreshTokenApi(
+      accessStore.refreshToken,
+    );
+
+    accessStore.setAccessToken(accessToken);
+    accessStore.setRefreshToken(refreshToken);
+
+    return accessToken;
   }
 
   function formatToken(token: null | string) {
@@ -71,15 +75,13 @@ function createRequestClient(baseURL: string, options?: RequestClientOptions) {
     },
   });
 
-  // 处理返回的响应数据格式
+  // 当前后端使用 HTTP 状态码 + 裸 DTO 返回成功结果。
   client.addResponseInterceptor({
-    //这里改过，详情参考https://doc.vben.pro/guide/essentials/server.html#%E6%8E%A5%E5%8F%A3%E8%AF%B7%E6%B1%82%E9%85%8D%E7%BD%AE
     fulfilled: async (response) => {
-      // 正常响应码
-      if (response.status === 200 || response.status === 204) {
+      if (response.status >= 200 && response.status < 300) {
         return response.data;
       }
-      // 其他，抛出异常
+
       throw Object.assign({}, response, { response });
     },
   });
@@ -116,13 +118,6 @@ export const requestClient = createRequestClient(apiURL, {
 
 export const baseRequestClient = new RequestClient({ baseURL: apiURL });
 
-/**
- * 建议的分页封装请求
- * @param url
- * @param pager
- * @param params
- * @returns
- */
 export const getPage = (url: string, pager: any, params: any) => {
   if (!pager.currentPage) {
     pager.currentPage = 1;
@@ -130,6 +125,8 @@ export const getPage = (url: string, pager: any, params: any) => {
   if (!pager.maxResultCount) {
     pager.maxResultCount = 20;
   }
+
   pager.skipCount = (pager.currentPage - 1) * pager.maxResultCount;
+
   return requestClient.get<any>(url, { params: { ...pager, ...params } });
 };

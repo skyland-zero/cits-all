@@ -9,7 +9,6 @@ export const overridesPreferences = defineOverridesPreferences({
   // overrides
   app: {
     name: import.meta.env.VITE_APP_TITLE,
-    // https://doc.vben.pro/guide/in-depth/access.html#%E6%AD%A5%E9%AA%A4-1
     accessMode: 'backend',
     enableRefreshToken: true,
   },

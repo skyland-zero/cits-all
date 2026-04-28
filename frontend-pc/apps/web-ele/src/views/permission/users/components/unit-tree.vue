@@ -1,8 +1,8 @@
 <!-- eslint-disable no-console -->
 <script lang="ts" setup>
-import { defineEmits, onMounted, ref, watch } from 'vue';
+import { onMounted, ref, watch } from 'vue';
 
-import { MdiSearch } from '@vben/icons';
+import { Search as MdiSearch } from '@vben/icons';
 
 import {
   ElContainer,

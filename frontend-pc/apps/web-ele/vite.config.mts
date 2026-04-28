@@ -18,8 +18,14 @@ export default defineConfig(async () => {
             rewrite: (path) => path.replace(/^\/api/, ''),
             // 允许自签证书
             secure: false,
-            // mock代理目标地址
+            // 本地后端代理地址
             target: 'http://localhost:5120/api',
+            ws: true,
+          },
+          '/hub': {
+            changeOrigin: true,
+            secure: false,
+            target: 'http://localhost:5120',
             ws: true,
           },
         },

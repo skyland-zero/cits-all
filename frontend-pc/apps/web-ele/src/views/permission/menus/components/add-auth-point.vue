@@ -44,7 +44,7 @@ const defaultProps = {
 };
 
 const initData = () => ({
-  parentId: null,
+  parentId: null as null | string,
   name: '',
   path: '',
   icon: '',

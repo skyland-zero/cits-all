@@ -1,6 +1,4 @@
 <script lang="ts" setup>
-import { defineProps, withDefaults } from 'vue';
-
 import { Page } from '@vben/common-ui';
 
 import {

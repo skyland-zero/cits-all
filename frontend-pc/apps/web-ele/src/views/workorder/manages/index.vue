@@ -3,7 +3,12 @@
 import { onActivated, onMounted, reactive, ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
 
-import { MdiAdd, MdiDelete, MdiEdit, MdiEye } from '@vben/icons';
+import {
+  CircleX as MdiDelete,
+  Eye as MdiEye,
+  Plus as MdiAdd,
+  UserRoundPen as MdiEdit,
+} from '@vben/icons';
 
 import {
   ElButton,
@@ -20,13 +25,13 @@ import {
   ElTable,
   ElTableColumn,
   ElTag,
-  type FormInstance,
 } from 'element-plus';
 
 import {
   addApi,
   deleteApi,
   editApi,
+  getApi,
   pageApi,
 } from '#/api/workorder/work-orders';
 import { MyContainer } from '#/components';
@@ -43,7 +48,6 @@ const router = useRouter();
 const tableData = ref<any[]>([]);
 const statsCardRef = ref<InstanceType<typeof WorkOrderStatsCard>>();
 const currentRow = ref<any | null>(null);
-const searchFormRef = ref<FormInstance>();
 const dialogFormVisible = ref(false);
 const detailVisible = ref(false);
 const actionType = ref(actionEnum.none);
@@ -112,10 +116,26 @@ const onAdd = () => {
  * 点击编辑
  * @param row
  */
-const onEdit = (row: any) => {
+const loadCurrentRow = async (id: string) => {
+  loading.value = true;
+  try {
+    return await getApi(id);
+  } catch (error) {
+    console.error(error);
+    return null;
+  } finally {
+    loading.value = false;
+  }
+};
+
+const onEdit = async (row: any) => {
   actionType.value = actionEnum.edit;
   dialogTitle.value = '编辑工单';
-  currentRow.value = row;
+  const detail = await loadCurrentRow(row.id);
+  if (!detail) {
+    return;
+  }
+  currentRow.value = detail;
   dialogFormVisible.value = true;
 };
 
@@ -123,8 +143,12 @@ const onEdit = (row: any) => {
  * 查看详情
  * @param row
  */
-const onView = (row: any) => {
-  currentRow.value = row;
+const onView = async (row: any) => {
+  const detail = await loadCurrentRow(row.id);
+  if (!detail) {
+    return;
+  }
+  currentRow.value = detail;
   detailVisible.value = true;
 };
 
@@ -249,7 +273,7 @@ const getPriorityTagType = (val: number) => {
       return 'info';
     }
     case WorkOrderPriority.Medium: {
-      return '';
+      return undefined;
     } // default
     default: {
       return 'info';
@@ -273,7 +297,7 @@ const getStatusTagType = (val: number) => {
       return 'info';
     }
     case WorkOrderStatus.InProgress: {
-      return '';
+      return undefined;
     }
     case WorkOrderStatus.PendingApproval: {
       return 'success';
@@ -294,7 +318,7 @@ const getStatusTagType = (val: number) => {
       <div class="p-4 bg-white mb-4">
         <WorkOrderStatsCard ref="statsCardRef" />
       </div>
-      <ElForm ref="searchFormRef" :inline="true" :model="formSearchData"
+      <ElForm :inline="true" :model="formSearchData"
         class="demo-form-inline ml-[18px] mr-[18px] mt-[18px]">
         <ElFormItem label="标题">
           <ElInput v-model="formSearchData.title" clearable placeholder="请输入标题" style="width: 200px" />

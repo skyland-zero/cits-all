@@ -1,6 +1,6 @@
 {
   "name": "@vben/web-ele",
-  "version": "5.5.9",
+  "version": "5.6.0",
   "homepage": "https://vben.pro",
   "bugs": "https://github.com/vbenjs/vue-vben-admin/issues",
   "repository": {
@@ -26,6 +26,7 @@
     "#/*": "./src/*"
   },
   "dependencies": {
+    "@microsoft/signalr": "8.0.7",
     "@vben/access": "workspace:*",
     "@vben/common-ui": "workspace:*",
     "@vben/constants": "workspace:*",
@@ -43,7 +44,6 @@
     "@vueuse/core": "catalog:",
     "dayjs": "catalog:",
     "element-plus": "catalog:",
-    "oidc-client-ts": "^3.1.0",
     "pinia": "catalog:",
     "vue": "catalog:",
     "vue-router": "catalog:"

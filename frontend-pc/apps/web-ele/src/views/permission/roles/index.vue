@@ -2,7 +2,12 @@
 <script lang="ts" setup>
 import { onMounted, reactive, ref, watch } from 'vue';
 
-import { MdiAdd, MdiDelete, MdiEdit, MdiViewDashboardEdit } from '@vben/icons';
+import {
+  CircleX as MdiDelete,
+  InspectionPanel as MdiViewDashboardEdit,
+  Plus as MdiAdd,
+  UserRoundPen as MdiEdit,
+} from '@vben/icons';
 
 import {
   ElButton,
@@ -16,7 +21,6 @@ import {
   ElRow,
   ElTable,
   ElTableColumn,
-  type FormInstance,
 } from 'element-plus';
 
 import {
@@ -34,7 +38,6 @@ import { actionEnum } from './enums';
 
 const tableData = ref<any>([]);
 const currentRow = ref<any | null>(null);
-const searchFormRef = ref<FormInstance>();
 const dialogFormVisible = ref(false);
 const actionType = ref(actionEnum.none);
 const dialogTitle = ref('');
@@ -238,7 +241,6 @@ onMounted(() => {
   <MyContainer :show-footer="true" :show-header="true">
     <template #header>
       <ElForm
-        ref="searchFormRef"
         :inline="true"
         :model="formSearchData"
         class="demo-form-inline ml-[18px] mr-[18px] mt-[18px]"

@@ -92,52 +92,6 @@ const coreRoutes: RouteRecordRaw[] = [
       },
     ],
   },
-  {
-    meta: {
-      title: 'Oidc',
-      hideInBreadcrumb: true,
-      hideInMenu: true,
-      hideInTab: true,
-    },
-    name: 'Oidc',
-    path: '/oidc',
-    redirect: '/oidc/login',
-    children: [
-      {
-        name: 'OidcCallback',
-        path: 'callback',
-        component: () => import('#/views/_core/oidc/callback.vue'),
-        meta: {
-          title: '统一认证中心-正在登录',
-        },
-      },
-      {
-        name: 'OidcLogin',
-        path: 'login',
-        component: () => import('#/views/_core/oidc/login.vue'),
-        meta: {
-          title: '统一认证中心-正在登录',
-        },
-      },
-      {
-        name: 'OidcSignoutSilentCallback',
-        path: 'signout-silent-callback',
-        component: () =>
-          import('#/views/_core/oidc/signout-silent-callback.vue'),
-        meta: {
-          title: '统一认证中心-退出登录中',
-        },
-      },
-      {
-        name: 'OidcSignoutCallback',
-        path: 'signout-callback',
-        component: () => import('#/views/_core/oidc/signout-callback.vue'),
-        meta: {
-          title: '统一认证中心-退出登录中',
-        },
-      },
-    ],
-  },
 ];
 
 export { coreRoutes, fallbackNotFoundRoute };

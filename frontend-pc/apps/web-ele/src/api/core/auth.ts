@@ -31,7 +31,7 @@ export async function loginApi(data: AuthApi.LoginParams) {
  */
 export async function refreshTokenApi(refreshToken: null | string) {
   return baseRequestClient.post<AuthApi.RefreshTokenResult>(
-    `/basic/account/refresh-token?refreshToken=${refreshToken}`,
+    `/basic/account/refresh-token?refreshToken=${encodeURIComponent(refreshToken ?? '')}`,
   );
 }
 

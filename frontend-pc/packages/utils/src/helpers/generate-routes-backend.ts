@@ -6,13 +6,28 @@ import type {
   RouteRecordStringComponent,
 } from '@vben-core/typings';
 
+import { mapTree } from '@vben-core/shared/utils';
+
+/**
+ * 判断路由是否在菜单中显示但访问时展示 403（让用户知悉功能并申请权限）
+ */
+function menuHasVisibleWithForbidden(route: RouteRecordRaw): boolean {
+  return !!route.meta?.menuVisibleWithForbidden;
+}
+
 /**
  * 动态生成路由 - 后端方式
+ * 对 meta.menuVisibleWithForbidden 为 true 的项直接替换为 403 组件，让用户知悉功能并申请权限。
  */
 async function generateRoutesByBackend(
   options: GenerateMenuAndRoutesOptions,
 ): Promise<RouteRecordRaw[]> {
-  const { fetchMenuListAsync, layoutMap = {}, pageMap = {} } = options;
+  const {
+    fetchMenuListAsync,
+    layoutMap = {},
+    pageMap = {},
+    forbiddenComponent,
+  } = options;
 
   try {
     const menuRoutes = await fetchMenuListAsync?.();
@@ -26,7 +41,16 @@ async function generateRoutesByBackend(
       normalizePageMap[normalizeViewPath(key)] = value;
     }
 
-    const routes = convertRoutes(menuRoutes, layoutMap, normalizePageMap);
+    let routes = convertRoutes(menuRoutes, layoutMap, normalizePageMap);
+
+    if (forbiddenComponent) {
+      routes = mapTree(routes, (route) => {
+        if (menuHasVisibleWithForbidden(route)) {
+          route.component = forbiddenComponent;
+        }
+        return route;
+      });
+    }
 
     return routes;
   } catch (error) {
@@ -39,22 +63,14 @@ function convertRoutes(
   routes: RouteRecordStringComponent[],
   layoutMap: ComponentRecordType,
   pageMap: ComponentRecordType,
-  ancestors: string[] = [],
 ): RouteRecordRaw[] {
-  return routes.map((node) => {
-    const route = { ...node } as unknown as RouteRecordRaw;
-    let { component, name } = node;
+  return mapTree(routes, (node) => {
+    const route = node as unknown as RouteRecordRaw;
+    const { component, name } = node;
 
     if (!name) {
       console.error('route name is required', route);
-    } else if (ancestors.includes(name as string)) {
-      // 如果名称与祖先重复，则添加后缀以避免 vue-router 报错
-      // 这种情况通常发生在后端数据配置不当时（例如分组和子页面同名）
-      name = `${name as string}_${ancestors.length}`;
-      route.name = name;
     }
-
-    const currentAncestors = name ? [...ancestors, name as string] : ancestors;
 
     // layout转换
     if (component && layoutMap[component]) {
@@ -71,15 +87,6 @@ function convertRoutes(
         console.error(`route component is invalid: ${pageKey}`, route);
         route.component = pageMap['/_core/fallback/not-found.vue'];
       }
-    }
-
-    if (node.children && node.children.length > 0) {
-      route.children = convertRoutes(
-        node.children,
-        layoutMap,
-        pageMap,
-        currentAncestors,
-      );
     }
 
     return route;
