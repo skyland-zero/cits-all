@@ -3,7 +3,7 @@ setlocal enableextensions
 
 set "ROOT_DIR=%~dp0"
 set "BACKEND_DIR=%ROOT_DIR%backend-api"
-set "FRONTEND_DIR=%ROOT_DIR%frontend-pc-v56"
+set "FRONTEND_DIR=%ROOT_DIR%frontend-pc"
 
 where dotnet >nul 2>nul
 if errorlevel 1 (
@@ -30,8 +30,8 @@ if not exist "%FRONTEND_DIR%\package.json" (
 echo Starting backend-api on http://localhost:5120 ...
 start "backend-api" cmd /k "cd /d "%BACKEND_DIR%" && dotnet watch run --launch-profile http --project "src\MyApi.HttpApi\MyApi.HttpApi.csproj""
 
-echo Starting frontend-pc-v56 web-ele on http://localhost:5777 ...
-start "frontend-pc-v56 web-ele" cmd /k "cd /d "%FRONTEND_DIR%" && pnpm dev:ele"
+echo Starting frontend-pc web-ele on http://localhost:5777 ...
+start "frontend-pc web-ele" cmd /k "cd /d "%FRONTEND_DIR%" && pnpm dev:ele"
 
 echo.
 echo Backend:  http://localhost:5120
