@@ -31,8 +31,6 @@ const { updateDate: updateMemChart } = useEcharts(memChartRef);
 const fetchData = async () => {
   try {
     const data = await getServerInfoApi();
-    // eslint-disable-next-line no-console
-    console.log('Monitor Data:', data);
     serverInfo.value = data;
 
     // 更新图表数据
