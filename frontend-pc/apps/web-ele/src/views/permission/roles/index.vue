@@ -1,24 +1,28 @@
 <!-- eslint-disable no-console -->
 <script lang="ts" setup>
-import { onMounted, reactive, ref, watch } from 'vue';
+import { computed, onMounted, reactive, ref, watch } from 'vue';
 
 import {
-  CircleX as MdiDelete,
-  InspectionPanel as MdiViewDashboardEdit,
+  Fullscreen,
   Plus as MdiAdd,
+  CircleX as MdiDelete,
   UserRoundPen as MdiEdit,
+  RotateCw as MdiReset,
+  Search as MdiSearch,
+  InspectionPanel as MdiViewDashboardEdit,
+  Minimize2,
+  Settings,
+  SvgDownloadIcon,
 } from '@vben/icons';
 
 import {
   ElButton,
-  ElCol,
   ElDialog,
   ElForm,
   ElFormItem,
   ElInput,
   ElMessage,
   ElPagination,
-  ElRow,
   ElTable,
   ElTableColumn,
 } from 'element-plus';
@@ -36,6 +40,11 @@ import EditMenus from './components/edit-menus.vue';
 import Write from './components/write.vue';
 import { actionEnum } from './enums';
 
+type MyContainerExpose = InstanceType<typeof MyContainer> & {
+  isFullscreen?: boolean;
+  toggleFullscreen?: () => Promise<void> | void;
+};
+
 const tableData = ref<any>([]);
 const currentRow = ref<any | null>(null);
 const dialogFormVisible = ref(false);
@@ -43,9 +52,13 @@ const actionType = ref(actionEnum.none);
 const dialogTitle = ref('');
 const writeRef = ref<InstanceType<typeof Write>>();
 const setMenusRef = ref<InstanceType<typeof EditMenus>>();
+const containerRef = ref<MyContainerExpose>();
 const saveLoading = ref(false);
 const loading = ref(false);
-const activeRowId = ref(null);
+
+const isListFullscreen = computed(() =>
+  Boolean(containerRef.value?.isFullscreen),
+);
 
 const initFormSearchData = () => ({
   name: null,
@@ -126,6 +139,18 @@ const onDelete = (row: any) => {
   dialogTitle.value = '提示';
   currentRow.value = row;
   dialogFormVisible.value = true;
+};
+
+const onExport = () => {
+  ElMessage.info('导出功能待接入');
+};
+
+const onTableSetting = () => {
+  ElMessage.info('列表设置功能待接入');
+};
+
+const onToggleFullscreen = () => {
+  containerRef.value?.toggleFullscreen?.();
 };
 
 /**
@@ -210,16 +235,6 @@ const close = () => {
   dialogFormVisible.value = false;
 };
 
-// 鼠标进入行时触发
-const handleMouseEnter = (row: any) => {
-  activeRowId.value = row.id;
-};
-
-// 鼠标离开行时触发
-const handleMouseLeave = () => {
-  activeRowId.value = null;
-};
-
 // 深度监听对象变化
 watch(
   () => ({
@@ -238,12 +253,12 @@ onMounted(() => {
 </script>
 
 <template>
-  <MyContainer :show-footer="true" :show-header="true">
+  <MyContainer ref="containerRef" :show-footer="true" :show-header="true">
     <template #header>
       <ElForm
         :inline="true"
         :model="formSearchData"
-        class="demo-form-inline ml-[18px] mr-[18px] mt-[18px]"
+        class="demo-form-inline no-action-align ml-[18px] mr-[18px] mt-[18px]"
       >
         <ElFormItem label="角色名称">
           <ElInput
@@ -261,29 +276,36 @@ onMounted(() => {
             style="width: 200px"
           />
         </ElFormItem>
-        <ElFormItem>
-          <ElButton type="primary" @click="search">查询</ElButton>
-          <ElButton type="" @click="onReset">重置</ElButton>
-        </ElFormItem>
       </ElForm>
     </template>
     <template #table-header>
-      <ElRow>
-        <ElCol :span="12" class="pl-[8px]">
-          <ElButton
-            :icon="MdiAdd"
-            plain
-            size="small"
-            type="primary"
-            @click="onAdd()"
-          >
+      <div class="flex w-full items-center justify-between gap-3">
+        <div class="flex items-center gap-2">
+          <ElButton :icon="MdiSearch" type="primary" @click="search">
+            查询
+          </ElButton>
+          <ElButton :icon="MdiReset" @click="onReset">重置</ElButton>
+          <div class="mx-1 h-4 border-l border-gray-200"></div>
+          <ElButton :icon="MdiAdd" plain type="primary" @click="onAdd()">
             新增
           </ElButton>
-        </ElCol>
-        <ElCol :span="12">
-          <div class="grid-content ep-bg-purple-light"></div>
-        </ElCol>
-      </ElRow>
+        </div>
+        <div class="flex items-center gap-2">
+          <ElButton :icon="SvgDownloadIcon" plain @click="onExport">
+            导出
+          </ElButton>
+          <ElButton
+            :icon="isListFullscreen ? Minimize2 : Fullscreen"
+            plain
+            @click="onToggleFullscreen"
+          >
+            {{ isListFullscreen ? '退出全屏' : '全屏' }}
+          </ElButton>
+          <ElButton :icon="Settings" plain @click="onTableSetting">
+            列表设置
+          </ElButton>
+        </div>
+      </div>
     </template>
     <ElTable
       :data="tableData"
@@ -292,55 +314,62 @@ onMounted(() => {
       height="100%"
       row-key="id"
       v-loading="loading"
-      @cell-mouse-enter="handleMouseEnter"
-      @cell-mouse-leave="handleMouseLeave"
     >
       <ElTableColumn fixed label="角色名称" prop="name" />
       <ElTableColumn label="角色编码" prop="code" />
       <ElTableColumn label="说明" prop="description" />
-      <ElTableColumn align="center" class="operation" label="" width="300">
+      <ElTableColumn
+        align="center"
+        class="operation"
+        fixed="right"
+        label="操作"
+        width="300"
+      >
         <template #default="scope">
-          <Transition>
-            <div v-show="activeRowId === scope.row.id" class="action-buttons">
-              <ElButton
-                :icon="MdiEdit"
-                size="small"
-                text
-                type="primary"
-                @click="onEdit(scope.row)"
-              >
-                编辑
-              </ElButton>
-              <ElButton
-                :icon="MdiViewDashboardEdit"
-                size="small"
-                text
-                type="primary"
-                @click="onSetMenus(scope.row)"
-              >
-                设置权限
-              </ElButton>
-              <ElButton
-                :icon="MdiDelete"
-                size="small"
-                text
-                type="danger"
-                @click="onDelete(scope.row)"
-              >
-                删除
-              </ElButton>
-            </div>
-          </Transition>
+          <div class="action-buttons">
+            <ElButton
+              :icon="MdiEdit"
+              size="small"
+              text
+              type="primary"
+              @click="onEdit(scope.row)"
+            >
+              编辑
+            </ElButton>
+            <ElButton
+              :icon="MdiViewDashboardEdit"
+              size="small"
+              text
+              type="primary"
+              @click="onSetMenus(scope.row)"
+            >
+              设置权限
+            </ElButton>
+            <ElButton
+              :icon="MdiDelete"
+              size="small"
+              text
+              type="danger"
+              @click="onDelete(scope.row)"
+            >
+              删除
+            </ElButton>
+          </div>
         </template>
       </ElTableColumn>
     </ElTable>
     <template #table-footer>
-      <ElPagination
-        v-model:current-page="pager.currentPage"
-        v-model:page-size="pager.maxResultCount"
-        :total="pager.totalCount"
-        layout="prev, pager, next, jumper, total"
-      />
+      <div class="flex w-full items-center justify-between">
+        <span class="text-sm text-gray-500">共 {{ pager.totalCount }} 条</span>
+        <ElPagination
+          v-model:current-page="pager.currentPage"
+          v-model:page-size="pager.maxResultCount"
+          :total="pager.totalCount"
+          layout="prev, pager, next, jumper"
+          next-text="下一页"
+          prev-text="上一页"
+        />
+      </div>
     </template>
     <template #dialog>
       <ElDialog
