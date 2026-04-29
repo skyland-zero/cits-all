@@ -162,7 +162,7 @@ public static class CommonExtensions
     public static bool ToBool(this object s)
     {
         if (s == null) return false;
-        s = s.ToString().ToLower();
+        s = s.ToString()?.ToLower() ?? string.Empty;
         if (s.Equals(1) || s.Equals("1") || s.Equals("true") || s.Equals("是") || s.Equals("yes"))
             return true;
         if (s.Equals(0) || s.Equals("0") || s.Equals("false") || s.Equals("否") || s.Equals("no"))
@@ -243,7 +243,7 @@ public static class CommonExtensions
     public static string ToHex(this byte[] bytes, bool lowerCase = true)
     {
         if (bytes == null)
-            return null;
+            return string.Empty;
 
         var result = new StringBuilder();
         var format = lowerCase ? "x2" : "X2";
@@ -260,7 +260,7 @@ public static class CommonExtensions
     public static byte[] HexToBytes(this string s)
     {
         if (s.IsNull())
-            return null;
+            return Array.Empty<byte>();
         var bytes = new byte[s.Length / 2];
 
         for (var x = 0; x < s.Length / 2; x++)
@@ -280,7 +280,7 @@ public static class CommonExtensions
     public static string ToBase64(this byte[] bytes)
     {
         if (bytes == null)
-            return null;
+            return string.Empty;
 
         return Convert.ToBase64String(bytes);
     }

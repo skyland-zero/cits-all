@@ -42,7 +42,7 @@ public class IdentityMenu : EntityBaseWithSoftDelete
     /// <summary>
     ///     图标（菜单/tab）
     /// </summary>
-    public string Icon { get; set; }
+    public string Icon { get; set; } = string.Empty;
 
     /// <summary>
     ///     iframe 地址
@@ -77,7 +77,7 @@ public class IdentityMenu : EntityBaseWithSoftDelete
     /// <summary>
     ///     标题名称
     /// </summary>
-    public string Name { get; set; }
+    public string Name { get; set; } = string.Empty;
 
     /// <summary>
     ///     路由名称
@@ -115,5 +115,5 @@ public class IdentityMenu : EntityBaseWithSoftDelete
     public int? AffixTabOrder { get; set; }
     
     [Navigate(ManyToMany = typeof(IdentityRoleMenu))]
-    public virtual List<IdentityRole>? Roles { get; set; }
+    public virtual List<IdentityRole> Roles { get; set; } = new();
 }

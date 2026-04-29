@@ -8,13 +8,13 @@ public class RoleCreateUpdateDto
     ///     角色名称
     /// </summary>
     [MaxLength(20)]
-    public string Name { get; set; }
+    public string Name { get; set; } = string.Empty;
 
     /// <summary>
     ///     角色唯一编码
     /// </summary>
     [MaxLength(50)]
-    public string Code { get; set; }
+    public string Code { get; set; } = string.Empty;
 
     /// <summary>
     ///     A default role is automatically assigned to a new user
@@ -29,7 +29,7 @@ public class RoleCreateUpdateDto
     /// <summary>
     ///     菜单Ids
     /// </summary>
-    public List<Guid>? MenuIds { get; set; }
+    public List<Guid> MenuIds { get; set; } = [];
 
     /// <summary>
     ///     描述

@@ -2,7 +2,7 @@
 
 public class UserRoleMenuCacheModel
 {
-    public UserRoleCacheModel Roles { get; set; }
+    public UserRoleCacheModel Roles { get; set; } = new();
     
-    public List<MenuCacheModel> Menus { get; set; }
+    public List<MenuCacheModel> Menus { get; set; } = new();
 }

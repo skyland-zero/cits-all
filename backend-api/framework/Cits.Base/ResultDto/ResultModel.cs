@@ -22,7 +22,7 @@ public class ResultModel<T> : IResultModel<T>
     /// <summary>
     ///     错误
     /// </summary>
-    public string Msg { get; private set; }
+    public string Msg { get; private set; } = string.Empty;
 
     /// <summary>
     ///     处理是否成功
@@ -33,7 +33,7 @@ public class ResultModel<T> : IResultModel<T>
     /// <summary>
     ///     返回数据
     /// </summary>
-    public T Data { get; private set; }
+    public T Data { get; private set; } = default!;
 
     /// <summary>
     ///     成功
@@ -94,7 +94,7 @@ public static class ResultModel
     /// </summary>
     /// <param name="data">返回数据</param>
     /// <returns></returns>
-    public static IResultModel<T> Success<T>(string mgs, T data = default)
+    public static IResultModel<T> Success<T>(string mgs, T data = default!)
     {
         return new ResultModel<T>().Success(data, mgs);
     }
@@ -106,7 +106,7 @@ public static class ResultModel
     /// <returns></returns>
     public static IResultModel Success(string mgs)
     {
-        return new ResultModel<object>().Success(null, mgs);
+        return new ResultModel<object>().Success(default!, mgs);
     }
 
     /// <summary>
@@ -114,7 +114,7 @@ public static class ResultModel
     /// </summary>
     /// <param name="data">返回数据</param>
     /// <returns></returns>
-    public static IResultModel<T> Success<T>(T data = default)
+    public static IResultModel<T> Success<T>(T data = default!)
     {
         return new ResultModel<T>().Success(data);
     }
@@ -133,7 +133,7 @@ public static class ResultModel
     /// </summary>
     /// <param name="error">错误信息</param>
     /// <returns></returns>
-    public static IResultModel<T> Failed<T>(string error = null)
+    public static IResultModel<T> Failed<T>(string? error = null)
     {
         return new ResultModel<T>().Failed(error ?? "failed");
     }
@@ -143,7 +143,7 @@ public static class ResultModel
     /// </summary>
     /// <param name="error">错误信息</param>
     /// <returns></returns>
-    public static IResultModel<T> Failed<T>(string error, T data = default)
+    public static IResultModel<T> Failed<T>(string error, T data = default!)
     {
         return new ResultModel<T>().Failed(data, error ?? "failed");
     }
@@ -152,7 +152,7 @@ public static class ResultModel
     ///     失败
     /// </summary>
     /// <returns></returns>
-    public static IResultModel Failed(string error = null)
+    public static IResultModel Failed(string? error = null)
     {
         return Failed<string>(error);
     }

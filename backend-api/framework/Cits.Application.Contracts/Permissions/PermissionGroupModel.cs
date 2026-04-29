@@ -4,8 +4,8 @@ public class PermissionGroupModel
 {
     private readonly List<PermissionModel> _permissions = new();
     public Guid Id { get; set; } = Guid.CreateVersion7();
-    public string Code { get; set; }
-    public string DisplayName { get; set; }
+    public string Code { get; set; } = string.Empty;
+    public string DisplayName { get; set; } = string.Empty;
 
     public PermissionGroupModel AddPermission(
         string code,

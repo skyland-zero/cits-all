@@ -18,6 +18,6 @@ public sealed class UserLockedOutCacheModel
         LockoutEnd = lockoutEnd;
     }
 
-    public string Username { get; set; }
+    public string Username { get; set; } = string.Empty;
     public DateTimeOffset? LockoutEnd { get; set; }
 }

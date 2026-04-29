@@ -8,19 +8,19 @@ public class CurrentIdentityUserDto
     ///     头像
     /// </summary>
     /// <value></value>
-    public string Avatar { get; set; }
+    public string Avatar { get; set; } = string.Empty;
 
     /// <summary>
     ///     昵称
     /// </summary>
     /// <value></value>
-    public string Surname { get; set; }
+    public string Surname { get; set; } = string.Empty;
 
     /// <summary>
     ///     角色
     /// </summary>
     /// <value></value>
-    public string[] Roles { get; set; }
+    public string[] Roles { get; set; } = [];
 
     /// <summary>
     ///     用户id
@@ -33,19 +33,19 @@ public class CurrentIdentityUserDto
     /// </summary>
     /// <value></value>
     [JsonPropertyName("username")]
-    public string UserName { get; set; }
+    public string UserName { get; set; } = string.Empty;
 
     /// <summary>
     ///     描述
     /// </summary>
     /// <value></value>
-    public string Desc { get; set; }
+    public string Desc { get; set; } = string.Empty;
 
     /// <summary>
     ///     首页路由
     /// </summary>
     /// <value></value>
-    public string HomePath { get; set; }
+    public string HomePath { get; set; } = string.Empty;
     
     /// <summary>
     ///     是否已激活

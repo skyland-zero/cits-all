@@ -10,12 +10,12 @@ public class IdentityRole : EntityBaseWithSoftDelete<Guid>
     /// <summary>
     ///     角色名称
     /// </summary>
-    public string Name { get; protected internal set; }
+    public string Name { get; protected internal set; } = string.Empty;
 
     /// <summary>
     ///     角色唯一编码
     /// </summary>
-    public string Code { get; protected internal set; }
+    public string Code { get; protected internal set; } = string.Empty;
 
     /// <summary>
     ///     A default role is automatically assigned to a new user
@@ -36,5 +36,5 @@ public class IdentityRole : EntityBaseWithSoftDelete<Guid>
     /// Menus导航属性
     /// </summary>
     [Navigate(ManyToMany = typeof(IdentityRoleMenu))]
-    public virtual ICollection<IdentityMenu>? Menus { get; set; }
+    public virtual ICollection<IdentityMenu> Menus { get; set; } = new List<IdentityMenu>();
 }

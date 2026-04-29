@@ -9,7 +9,7 @@ public static class MethodInfoExtensions
         return method.GetCustomAttributes(typeof(T), false).FirstOrDefault() is T;
     }
 
-    public static T GetAttribute<T>(this MethodInfo method) where T : Attribute
+    public static T? GetAttribute<T>(this MethodInfo method) where T : Attribute
     {
         return method.GetCustomAttributes(typeof(T), false).FirstOrDefault() as T;
     }

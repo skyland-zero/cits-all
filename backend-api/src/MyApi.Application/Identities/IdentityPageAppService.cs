@@ -32,10 +32,14 @@ public class IdentityPageAppService : IIdentityPageAppService
     // [Authorize(BasicPermissions.Pages.Default)]
     public async Task<PagedResultDto<IdentityPageDto>> GetListAsync(GetIdentityPagesInput input)
     {
+        var name = input.Name ?? string.Empty;
+        var path = input.Path ?? string.Empty;
+        var description = input.Description ?? string.Empty;
+
         var query = _freeSql.Select<IdentityPage>()
-            .WhereIf(!input.Name.IsNullOrWhiteSpace(), x => x.Name.Contains(x.Name))
-            .WhereIf(!input.Path.IsNullOrWhiteSpace(), x => x.Path.Contains(x.Path))
-            .WhereIf(!input.Description.IsNullOrWhiteSpace(), x => x.Description.Contains(x.Description));
+            .WhereIf(!name.IsNullOrWhiteSpace(), x => x.Name.Contains(name))
+            .WhereIf(!path.IsNullOrWhiteSpace(), x => x.Path != null && x.Path.Contains(path))
+            .WhereIf(!description.IsNullOrWhiteSpace(), x => x.Description != null && x.Description.Contains(description));
 
         var count = await query.CountAsync();
         if (count == 0)

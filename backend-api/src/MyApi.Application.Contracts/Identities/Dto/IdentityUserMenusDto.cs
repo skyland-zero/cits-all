@@ -32,12 +32,12 @@ public class IdentityUserMenusDto : EntityDto<Guid>
     /// <summary>
     ///     图标（菜单/tab）
     /// </summary>
-    public string Icon { get; set; }
+    public string Icon { get; set; } = string.Empty;
 
     /// <summary>
     ///     iframe 地址
     /// </summary>
-    public string IframeSrc { get; set; }
+    public string IframeSrc { get; set; } = string.Empty;
 
     /// <summary>
     ///     开启KeepAlive缓存
@@ -47,7 +47,7 @@ public class IdentityUserMenusDto : EntityDto<Guid>
     /// <summary>
     ///     外链-跳转路径
     /// </summary>
-    public string Link { get; set; }
+    public string Link { get; set; } = string.Empty;
 
     /// <summary>
     ///     在新窗口打开
@@ -62,17 +62,17 @@ public class IdentityUserMenusDto : EntityDto<Guid>
     /// <summary>
     ///     路由参数
     /// </summary>
-    public string Query { get; set; }
+    public string Query { get; set; } = string.Empty;
 
     /// <summary>
     ///     标题名称
     /// </summary>
-    public string Name { get; set; }
+    public string Name { get; set; } = string.Empty;
 
     /// <summary>
     ///     页面路径
     /// </summary>
-    public string Path { get; set; }
+    public string Path { get; set; } = string.Empty;
 
     /// <summary>
     ///     子级

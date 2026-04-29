@@ -16,9 +16,14 @@ public class LoginLogAppService : ILoginLogAppService
 
     public async Task<PagedResultDto<LoginLogDto>> GetListAsync(GetLoginLogsInput input)
     {
+        var userName = input.UserName ?? string.Empty;
+        var ip = input.IP ?? string.Empty;
+
         var list = await _freeSql.Select<LoginLog>()
-            .WhereIf(!string.IsNullOrWhiteSpace(input.UserName), a => a.UserName.Contains(input.UserName!) || a.RealName.Contains(input.UserName!))
-            .WhereIf(!string.IsNullOrWhiteSpace(input.IP), a => a.IP.Contains(input.IP!))
+            .WhereIf(!string.IsNullOrWhiteSpace(userName), a =>
+                (a.UserName != null && a.UserName.Contains(userName)) ||
+                (a.RealName != null && a.RealName.Contains(userName)))
+            .WhereIf(!string.IsNullOrWhiteSpace(ip), a => a.IP != null && a.IP.Contains(ip))
             .WhereIf(input.Status.HasValue, a => a.Status == input.Status!.Value)
             .OrderByDescending(a => a.LoginTime)
             .Count(out var totalCount)

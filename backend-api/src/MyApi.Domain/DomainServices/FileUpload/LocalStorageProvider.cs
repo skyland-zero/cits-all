@@ -13,13 +13,13 @@ public class LocalStorageProvider : IStorageProvider
     public LocalStorageProvider(IConfiguration config)
     {
         _config = config;
-        _tempSub = _config["StorageConfig:TempSubFolder"];
-        _bizSub = _config["StorageConfig:BusinessSubFolder"];
+        _tempSub = _config["StorageConfig:TempSubFolder"] ?? string.Empty;
+        _bizSub = _config["StorageConfig:BusinessSubFolder"] ?? string.Empty;
     }
 
     private string GetAvailableRoot()
     {
-        var paths = _config.GetSection("StorageConfig:Local:Paths").Get<string[]>();
+        var paths = _config.GetSection("StorageConfig:Local:Paths").Get<string[]>() ?? Array.Empty<string>();
         var minFree = _config.GetValue<double>("StorageConfig:Local:MinFreeGB") * 1024 * 1024 * 1024;
 
         foreach (var path in paths)
@@ -27,7 +27,13 @@ public class LocalStorageProvider : IStorageProvider
             try
             {
                 // 自动识别 Linux/Windows 挂载点剩余空间
-                var drive = new DriveInfo(Path.GetPathRoot(Path.GetFullPath(path)));
+                var root = Path.GetPathRoot(Path.GetFullPath(path));
+                if (string.IsNullOrWhiteSpace(root))
+                {
+                    continue;
+                }
+
+                var drive = new DriveInfo(root);
                 if (drive.IsReady && drive.AvailableFreeSpace > minFree) return path;
             }
             catch
@@ -46,7 +52,7 @@ public class LocalStorageProvider : IStorageProvider
         var relPath = Path.Combine(_bizSub, fileName);
         var fullPath = Path.Combine(root, relPath);
         var tempPath = fullPath + UploadingSuffix;
-        Directory.CreateDirectory(Path.GetDirectoryName(fullPath) ?? string.Empty);
+        Directory.CreateDirectory(Path.GetDirectoryName(fullPath) ?? root);
 
         // 手动 buffer 实现进度
         byte[] buffer = new byte[81920];
@@ -100,7 +106,7 @@ public class LocalStorageProvider : IStorageProvider
     {
         var root = GetAvailableRoot();
         var path = Path.Combine(root, _tempSub, fileHash, chunkIndex.ToString());
-        Directory.CreateDirectory(Path.GetDirectoryName(path));
+        Directory.CreateDirectory(Path.GetDirectoryName(path) ?? root);
         using var fs = new FileStream(path, FileMode.Create);
         await chunkStream.CopyToAsync(fs);
     }
@@ -115,7 +121,7 @@ public class LocalStorageProvider : IStorageProvider
         var saveName = $"{Guid.NewGuid()}{ext}";
         var relPath = Path.Combine(_bizSub, saveName);
         var finalPath = Path.Combine(root, relPath);
-        Directory.CreateDirectory(Path.GetDirectoryName(finalPath));
+        Directory.CreateDirectory(Path.GetDirectoryName(finalPath) ?? root);
 
         // 排序合并
         var files = Directory.GetFiles(chunkDir).OrderBy(f => int.Parse(Path.GetFileName(f)));

@@ -13,12 +13,12 @@ public class EntityBase<TKey> : Entity<TKey>
     /// <summary>
     ///     创建人
     /// </summary>
-    public TKey CreatorUserId { get; set; }
+    public TKey CreatorUserId { get; set; } = default!;
 
     /// <summary>
     ///     创建人名称
     /// </summary>
-    public string CreatorUserName { get; set; }
+    public string CreatorUserName { get; set; } = string.Empty;
 
     /// <summary>
     ///     修改时间
@@ -29,12 +29,12 @@ public class EntityBase<TKey> : Entity<TKey>
     /// <summary>
     ///     修改人
     /// </summary>
-    public TKey LastModifierUserId { get; set; }
+    public TKey LastModifierUserId { get; set; } = default!;
 
     /// <summary>
     ///     最后修改人名称
     /// </summary>
-    public string LastModifierUserName { get; set; }
+    public string LastModifierUserName { get; set; } = string.Empty;
 }
 
 public class EntityBase : EntityBase<Guid>

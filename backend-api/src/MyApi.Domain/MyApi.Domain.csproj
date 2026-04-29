@@ -18,18 +18,13 @@
         <PackageReference Include="FreeSql" Version="3.5.304" />
         <PackageReference Include="Microsoft.Extensions.Caching.Hybrid" Version="10.1.0" />
         <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="10.0.1" />
+        <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="10.0.1" />
         <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.1" />
         <PackageReference Include="Microsoft.Extensions.Options" Version="10.0.1" />
         <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="10.0.1" />
         <PackageReference Include="Minio" Version="7.0.0" />
         <PackageReference Include="RestSharp" Version="113.0.0" />
         <PackageReference Include="Stateless" Version="5.20.0" />
-    </ItemGroup>
-
-    <ItemGroup>
-        <Reference Include="Microsoft.Extensions.Hosting.Abstractions">
-            <HintPath>C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\9.0.2\Microsoft.Extensions.Hosting.Abstractions.dll</HintPath>
-        </Reference>
     </ItemGroup>
 
 </Project>

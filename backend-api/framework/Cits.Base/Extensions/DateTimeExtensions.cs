@@ -11,7 +11,7 @@ public static class DateTimeExtensions
     /// <param name="dateTime"></param>
     /// <param name="format">默认：yyyy-MM-dd HH:mm:ss</param>
     /// <returns></returns>
-    public static string Format(this DateTime dateTime, string format = null)
+    public static string Format(this DateTime dateTime, string? format = null)
     {
         if (format.IsNull())
             format = "yyyy-MM-dd HH:mm:ss";

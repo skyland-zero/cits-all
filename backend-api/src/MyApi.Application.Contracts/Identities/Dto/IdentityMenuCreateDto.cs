@@ -38,7 +38,7 @@ public class IdentityMenuCreateDto
     /// <summary>
     ///     图标（菜单/tab）
     /// </summary>
-    public string? Icon { get; set; } = "";
+    public string Icon { get; set; } = string.Empty;
 
     /// <summary>
     ///     iframe 地址
@@ -73,7 +73,7 @@ public class IdentityMenuCreateDto
 ///     标题名称
 /// </summary>
 [Required]
-public string Name { get; set; }
+public string Name { get; set; } = string.Empty;
 
 /// <summary>
 ///     路由名称

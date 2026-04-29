@@ -15,7 +15,8 @@ public class FileValidationService
 
     public FileValidationService(IConfiguration config)
     {
-        _maxSize = config.GetValue<long>("FileValidation:MaxFileSizeMB") * 1024 * 1024;
+        _maxSize = config.GetValue<long?>("FileValidation:MaxFileSizeMB") ?? 100L;
+        _maxSize *= 1024 * 1024;
     }
 
     public async Task<(bool Valid, string Msg)> ValidateAsync(IFormFile file)
@@ -27,7 +28,15 @@ public class FileValidationService
         {
             using var stream = file.OpenReadStream();
             byte[] header = new byte[_magicBytes[ext].Length];
-            await stream.ReadAsync(header, 0, header.Length);
+            var offset = 0;
+            while (offset < header.Length)
+            {
+                var read = await stream.ReadAsync(header.AsMemory(offset, header.Length - offset));
+                if (read == 0) break;
+                offset += read;
+            }
+
+            if (offset < header.Length) return (false, "文件头读取失败");
             if (!header.SequenceEqual(_magicBytes[ext])) return (false, "文件头校验失败");
         }
             

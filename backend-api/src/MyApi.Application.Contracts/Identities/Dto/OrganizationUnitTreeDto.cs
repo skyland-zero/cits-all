@@ -7,12 +7,12 @@ public class OrganizationUnitTreeDto : EntityDto<Guid>
     /// <summary>
     ///     名称
     /// </summary>
-    public string Name { get; set; }
+    public string Name { get; set; } = string.Empty;
 
     /// <summary>
     ///     编码
     /// </summary>
-    public string Code { get; set; }
+    public string Code { get; set; } = string.Empty;
 
     /// <summary>
     ///     排序
@@ -29,5 +29,5 @@ public class OrganizationUnitTreeDto : EntityDto<Guid>
     /// </summary>
     public Guid? ParentId { get; set; }
 
-    public List<OrganizationUnitTreeDto>? Children { get; set; }
+    public List<OrganizationUnitTreeDto> Children { get; set; } = [];
 }

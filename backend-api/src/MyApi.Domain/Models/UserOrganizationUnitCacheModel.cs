@@ -8,7 +8,7 @@ public class UserOrganizationUnitCacheModel
     ///     名称
     /// </summary>
     [MaxLength(100)]
-    public string Name { get; set; }
+    public string Name { get; set; } = string.Empty;
 
     /// <summary>
     ///     编码
@@ -37,13 +37,13 @@ public class UserOrganizationUnitCacheModel
     ///     路径
     /// </summary>
     [MaxLength(1000)]
-    public string Path { get; set; }
+    public string Path { get; set; } = string.Empty;
 
     /// <summary>
     ///     名称路径
     /// </summary>
     [MaxLength(2000)]
-    public string NamePath { get; set; }
+    public string NamePath { get; set; } = string.Empty;
 
     /// <summary>
     ///     层级

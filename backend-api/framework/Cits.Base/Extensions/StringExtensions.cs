@@ -13,7 +13,7 @@ public static class StringExtensions
     /// </summary>
     /// <param name="s"></param>
     /// <returns></returns>
-    public static bool IsNull(this string s)
+    public static bool IsNull(this string? s)
     {
         return string.IsNullOrWhiteSpace(s);
     }
@@ -23,7 +23,7 @@ public static class StringExtensions
     /// </summary>
     /// <param name="s"></param>
     /// <returns></returns>
-    public static bool NotNull(this string s)
+    public static bool NotNull(this string? s)
     {
         return !string.IsNullOrWhiteSpace(s);
     }

@@ -2,7 +2,7 @@
 
 public class UserAuthPointCacheModel
 {
-    public UserRoleCacheModel Roles { get; set; }
+    public UserRoleCacheModel Roles { get; set; } = new();
     
-    public HashSet<string> Points { get; set; }
+    public HashSet<string> Points { get; set; } = new();
 }

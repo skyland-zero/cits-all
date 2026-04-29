@@ -16,7 +16,7 @@ public class Entity<TKey> : IEntity
     [Key]
     [Description("主键Id")]
     [Column(IsIdentity = true, IsPrimary = true)]
-    public virtual TKey Id { get; set; }
+    public virtual TKey Id { get; set; } = default!;
 }
 
 /// <summary>

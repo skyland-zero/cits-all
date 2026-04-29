@@ -23,7 +23,7 @@ public class IdentityMenuLiteDto : EntityDto<Guid>
     /// <summary>
     ///     标题名称
     /// </summary>
-    public string Name { get; set; }
+    public string Name { get; set; } = string.Empty;
 
     /// <summary>
     ///     类型

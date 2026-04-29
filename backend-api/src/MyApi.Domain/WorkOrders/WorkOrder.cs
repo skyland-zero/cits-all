@@ -14,12 +14,12 @@ public class WorkOrder : EntityBaseWithSoftDelete
     /// 工单业务编号（展示用）
     /// </summary>
     [Column(StringLength = 30, IsNullable = false)]
-    public string OrderNo { get; set; }
+    public string OrderNo { get; set; } = string.Empty;
 
     /// <summary>
     /// 工单标题
     /// </summary>
-    public string Title { get; set; }
+    public string Title { get; set; } = string.Empty;
 
     /// <summary>
     /// 优先级

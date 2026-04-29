@@ -34,9 +34,12 @@ public class UserAppService : IUserAppService
 
     public async Task<PagedResultDto<UserDto>> GetListAsync(GetUsersInput input)
     {
+        var userName = input.UserName ?? string.Empty;
+        var surname = input.Surname ?? string.Empty;
+
         var query = _freeSql.Select<IdentityUser>()
-            .WhereIf(!input.UserName.IsNullOrWhiteSpace(), x => x.UserName.Contains(input.UserName))
-            .WhereIf(!input.Surname.IsNullOrWhiteSpace(), x => x.Surname.Contains(input.Surname))
+            .WhereIf(!userName.IsNullOrWhiteSpace(), x => x.UserName.Contains(userName))
+            .WhereIf(!surname.IsNullOrWhiteSpace(), x => x.Surname.Contains(surname))
             .WhereIf(input.OrganizationUnitId.HasValue, x => x.OrganizationUnitId == input.OrganizationUnitId);
         var count = await query.CountAsync();
         if (count == 0)

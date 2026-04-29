@@ -31,9 +31,12 @@ public class RoleAppService : IRoleAppService
 
     public async Task<PagedResultDto<RoleDto>> GetListAsync(GetRolesInput input)
     {
+        var name = input.Name ?? string.Empty;
+        var code = input.Code ?? string.Empty;
+
         var query = _freeSql.Select<IdentityRole>()
-            .WhereIf(!input.Name.IsNullOrWhiteSpace(), x => x.Name.Contains(input.Name))
-            .WhereIf(!input.Code.IsNullOrWhiteSpace(), x => x.Code == input.Code)
+            .WhereIf(!name.IsNullOrWhiteSpace(), x => x.Name.Contains(name))
+            .WhereIf(!code.IsNullOrWhiteSpace(), x => x.Code == code)
             .WhereIf(input.IsDefault.HasValue, x => x.IsDefault == input.IsDefault)
             .WhereIf(input.IsStatic.HasValue, x => x.IsStatic == input.IsStatic);
 

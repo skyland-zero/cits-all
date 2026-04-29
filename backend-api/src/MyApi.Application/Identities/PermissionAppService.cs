@@ -32,7 +32,7 @@ public class PermissionAppService : IPermissionAppService
                 .Select(x => new TreeSelectStringDto
                 {
                     Value = x.Code,
-                    Label = x.DisplayName,
+                    Label = x.DisplayName ?? string.Empty,
                     ParentId = x.GroupCode
                 }).ToList();
             var temp = new TreeSelectStringDto

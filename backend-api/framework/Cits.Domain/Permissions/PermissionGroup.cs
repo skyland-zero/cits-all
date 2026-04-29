@@ -4,8 +4,8 @@ public class PermissionGroup
 {
     private readonly List<Permission> _permissions = new();
     public Guid Id { get; set; } = Guid.CreateVersion7();
-    public string Code { get; set; }
-    public string DisplayName { get; set; }
+    public string Code { get; set; } = string.Empty;
+    public string DisplayName { get; set; } = string.Empty;
 
     public bool IsEnabled { get; set; } = true;
 

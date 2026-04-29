@@ -8,11 +8,11 @@ public class LoginInput
     ///     用户名
     /// </summary>
     [Required]
-    public string UserName { get; set; }
+    public string UserName { get; set; } = string.Empty;
 
     /// <summary>
     ///     密码
     /// </summary>
     [Required]
-    public string Password { get; set; }
+    public string Password { get; set; } = string.Empty;
 }

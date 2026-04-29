@@ -18,7 +18,7 @@ public class IdentityMenuTreeDto : EntityDto<Guid>
     /// <summary>
     ///     标题名称
     /// </summary>
-    public string Name { get; set; }
+    public string Name { get; set; } = string.Empty;
 
     /// <summary>
     ///     类型
@@ -45,5 +45,5 @@ public class IdentityMenuTreeDto : EntityDto<Guid>
     /// <summary>
     ///     子级
     /// </summary>
-    public List<IdentityMenuTreeDto>? Children { get; set; }
+    public List<IdentityMenuTreeDto> Children { get; set; } = [];
 }

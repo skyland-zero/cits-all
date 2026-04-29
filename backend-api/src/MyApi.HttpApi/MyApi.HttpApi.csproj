@@ -18,7 +18,6 @@
         <PackageReference Include="FreeSql.Provider.Sqlite" Version="3.5.307" />
         <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.1" />
         <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.1" />
-        <PackageReference Include="Microsoft.AspNetCore.SignalR.Common" Version="10.0.1" />
         <PackageReference Include="Microsoft.Extensions.Caching.StackExchangeRedis" Version="10.0.1" />
         <PackageReference Include="Scalar.AspNetCore" Version="2.11.9" />
         <PackageReference Include="Scrutor" Version="7.0.0" />

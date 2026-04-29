@@ -10,22 +10,22 @@ public class FileAttachment : EntityBase
     /// <summary>
     /// 原始文件名
     /// </summary>
-    public string OriginalName { get; set; }
+    public string OriginalName { get; set; } = string.Empty;
 
     /// <summary>
     /// 文件哈希值（用于秒传和断点续传标识）
     /// </summary>
-    public string FileHash { get; set; }
+    public string FileHash { get; set; } = string.Empty;
 
     /// <summary>
     /// 存储在磁盘的文件名（Guid格式）
     /// </summary>
-    public string StorageName { get; set; }
+    public string StorageName { get; set; } = string.Empty;
 
     /// <summary>
     /// 文件扩展名
     /// </summary>
-    public string Extension { get; set; }
+    public string Extension { get; set; } = string.Empty;
 
     /// <summary>
     /// 文件大小（字节）
@@ -35,17 +35,17 @@ public class FileAttachment : EntityBase
     /// <summary>
     /// 文件内容类型（MIME类型）
     /// </summary>
-    public string ContentType { get; set; }
+    public string ContentType { get; set; } = string.Empty;
 
     /// <summary>
     /// 文件相对路径
     /// </summary>
-    public string RelativePath { get; set; }
+    public string RelativePath { get; set; } = string.Empty;
 
     /// <summary>
     /// 根标识（本地路径或MinIO桶名）
     /// </summary>
-    public string RootIdentifier { get; set; }
+    public string RootIdentifier { get; set; } = string.Empty;
 
     /// <summary>
     /// 创建时间

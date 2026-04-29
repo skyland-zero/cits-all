@@ -29,12 +29,12 @@ public class WorkOrderLog : EntityBaseWithSoftDelete
     /// <summary>
     /// 执行的操作动作
     /// </summary>
-    public string ActionName { get; set; }
+    public string ActionName { get; set; } = string.Empty;
 
     /// <summary>
     /// 操作备注/审批意见
     /// </summary>
-    public string Remark { get; set; }
+    public string Remark { get; set; } = string.Empty;
 
     /// <summary>
     /// 操作人 ID

@@ -10,7 +10,7 @@ public class IdentityPageCreateUpdateDto
     ///     名称
     /// </summary>
     [Required]
-    public string Name { get; set; }
+    public string Name { get; set; } = string.Empty;
 
     /// <summary>
     ///     路由名称
@@ -25,7 +25,7 @@ public class IdentityPageCreateUpdateDto
     /// <summary>
     ///     说明
     /// </summary>
-    public string Description { get; set; }
+    public string Description { get; set; } = string.Empty;
 
     /// <summary>
     ///     排序

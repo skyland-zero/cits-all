@@ -20,7 +20,7 @@ public class IdentityPage : EntityBaseWithSoftDelete
     /// <summary>
     ///     名称
     /// </summary>
-    public string Name { get; set; }
+    public string Name { get; set; } = string.Empty;
 
     /// <summary>
     ///     路由名称

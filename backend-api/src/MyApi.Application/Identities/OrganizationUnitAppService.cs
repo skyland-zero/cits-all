@@ -32,9 +32,12 @@ public class OrganizationUnitAppService : IOrganizationUnitService
 
     public async Task<PagedResultDto<OrganizationUnitDto>> GetListAsync(GetOrganizationUnitInput input)
     {
+        var name = input.Name ?? string.Empty;
+        var code = input.Code ?? string.Empty;
+
         var query = _freeSql.Select<IdentityOrganizationUnit>()
-            .WhereIf(!input.Name.IsNullOrWhiteSpace(), x => x.Name.Contains(input.Name))
-            .WhereIf(!input.Code.IsNullOrWhiteSpace(), x => x.Code == input.Code);
+            .WhereIf(!name.IsNullOrWhiteSpace(), x => x.Name.Contains(name))
+            .WhereIf(!code.IsNullOrWhiteSpace(), x => x.Code == code);
 
         var count = await query.CountAsync();
         if (count == 0)

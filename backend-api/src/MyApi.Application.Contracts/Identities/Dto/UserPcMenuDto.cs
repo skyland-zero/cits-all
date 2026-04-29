@@ -4,7 +4,7 @@ namespace MyApi.Application.Identities.Dto;
 
 public class UserPcMenuDto
 {
-    public UserPcMenuMetaDto Meta { get; set; }
+    public UserPcMenuMetaDto Meta { get; set; } = new();
     public string? Name { get; set; }
     public string? Path { get; set; }
     
@@ -31,7 +31,7 @@ public class UserPcMenuMetaDto
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public int? Order { get; set; }
     
-    public string? Title { get; set; }
+    public string Title { get; set; } = string.Empty;
     
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public bool? AffixTab { get; set; }

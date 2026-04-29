@@ -8,13 +8,13 @@ public class OrganizationUnitCreateUpdateDto
     ///     名称
     /// </summary>
     [MaxLength(100)]
-    public string Name { get; set; }
+    public string Name { get; set; } = string.Empty;
 
     /// <summary>
     ///     编码
     /// </summary>
     [MaxLength(20)]
-    public string Code { get; set; }
+    public string Code { get; set; } = string.Empty;
 
     /// <summary>
     ///     排序
