@@ -780,6 +780,9 @@ importers:
 
   apps/web-ele:
     dependencies:
+      '@element-plus/icons-vue':
+        specifier: ^2.3.2
+        version: 2.3.2(vue@3.5.27(typescript@5.9.3))
       '@microsoft/signalr':
         specifier: 8.0.7
         version: 8.0.7

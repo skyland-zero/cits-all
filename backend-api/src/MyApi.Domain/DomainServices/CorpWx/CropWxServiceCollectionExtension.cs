@@ -9,8 +9,6 @@ public static class CropWxServiceCollectionExtension
     {
         services.AddOptions();
         services.Configure<CorpWxOptions>(configuration.GetSection("CorpWxOptions"));
-        //AccessToken轮询刷新任务
-        services.AddHostedService<AccessTokenScheduledService>();
         services.AddSingleton<ICorpWxClient, CorpWxClient>();
         return services;
     }

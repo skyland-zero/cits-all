@@ -124,6 +124,7 @@ public class SystemDataSeedContributor : BackgroundService
             new() { Id = Guid.Parse("f6e804b2-0ea7-e13a-7787-b03c1b505209"), Name = "菜单管理", RouteName = "Menus", Path = "permission/menus/index" },
             new() { Id = Guid.Parse("f6e804b2-0ea7-e13a-7787-b03c1b505210"), Name = "服务器监控", RouteName = "ServerMonitor", Path = "monitor/server/index" },
             new() { Id = Guid.Parse("f6e804b2-0ea7-e13a-7787-b03c1b505211"), Name = "登录日志", RouteName = "LoginLog", Path = "monitor/login-log/index" },
+            new() { Id = Guid.Parse("f6e804b2-0ea7-e13a-7787-b03c1b505212"), Name = "操作日志", RouteName = "OperationLog", Path = "monitor/operation-log/index" },
         };
 
         foreach (var page in pages)
@@ -337,6 +338,18 @@ public class SystemDataSeedContributor : BackgroundService
                 Level = 2,
                 Order = 2,
                 PageId = Guid.Parse("f6e804b2-0ea7-e13a-7787-b03c1b505211")
+            },
+            new()
+            {
+                Id = Guid.Parse("f6e804b2-0ea7-e13a-7787-b03c1b505143"),
+                ParentId = Guid.Parse("f6e804b2-0ea7-e13a-7787-b03c1b505140"),
+                Name = "操作日志",
+                Path = "/monitor/operation-log",
+                Icon = "lucide:clipboard-list",
+                Type = IdentityMenuType.Menu,
+                Level = 2,
+                Order = 3,
+                PageId = Guid.Parse("f6e804b2-0ea7-e13a-7787-b03c1b505212")
             },
 
             // 权限点示例 (以角色管理为例)

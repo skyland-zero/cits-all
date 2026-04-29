@@ -14,6 +14,15 @@ const routes: RouteRecordRaw[] = [
     path: '/monitor',
     children: [
       {
+        name: 'OperationLog',
+        path: '/monitor/operation-log',
+        component: () => import('#/views/monitor/operation-log/index.vue'),
+        meta: {
+          icon: 'lucide:clipboard-list',
+          title: '操作日志',
+        },
+      },
+      {
         name: 'ServerMonitor',
         path: '/monitor/server',
         component: () => import('#/views/monitor/server/index.vue'),
