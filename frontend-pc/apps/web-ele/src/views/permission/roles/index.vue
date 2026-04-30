@@ -12,7 +12,6 @@ import {
   InspectionPanel as MdiViewDashboardEdit,
   Minimize2,
   Settings,
-  SvgDownloadIcon,
 } from '@vben/icons';
 
 import {
@@ -34,7 +33,8 @@ import {
   pageApi,
   setMenusApi,
 } from '#/api/permission/roles';
-import { MyContainer } from '#/components';
+import { AsyncExport, MyContainer } from '#/components';
+import type { ExportFieldDto } from '#/api/export/tasks';
 
 import EditMenus from './components/edit-menus.vue';
 import Write from './components/write.vue';
@@ -55,10 +55,20 @@ const setMenusRef = ref<InstanceType<typeof EditMenus>>();
 const containerRef = ref<MyContainerExpose>();
 const saveLoading = ref(false);
 const loading = ref(false);
+const roleExportFields: ExportFieldDto[] = [
+  { key: 'name', label: '角色名称', selected: true },
+  { key: 'code', label: '角色编码', selected: true },
+  { key: 'description', label: '说明', selected: true },
+  { key: 'isDefault', label: '默认角色', selected: false },
+  { key: 'isStatic', label: '静态角色', selected: false },
+];
 
 const isListFullscreen = computed(() =>
   Boolean(containerRef.value?.isFullscreen),
 );
+const exportQuery = computed<Record<string, unknown>>(() => ({
+  ...formSearchData,
+}));
 
 const initFormSearchData = () => ({
   name: null,
@@ -139,10 +149,6 @@ const onDelete = (row: any) => {
   dialogTitle.value = '提示';
   currentRow.value = row;
   dialogFormVisible.value = true;
-};
-
-const onExport = () => {
-  ElMessage.info('导出功能待接入');
 };
 
 const onTableSetting = () => {
@@ -291,9 +297,13 @@ onMounted(() => {
           </ElButton>
         </div>
         <div class="flex items-center gap-2">
-          <ElButton :icon="SvgDownloadIcon" plain @click="onExport">
-            导出
-          </ElButton>
+          <AsyncExport
+            :fields="roleExportFields"
+            :query="exportQuery"
+            file-name="角色列表"
+            module-key="basic.role"
+            module-name="角色"
+          />
           <ElButton
             :icon="isListFullscreen ? Minimize2 : Fullscreen"
             plain

@@ -9,6 +9,7 @@ using MyApi.HttpApi.Json;
 using MyApi.Domain.DomainServices.CorpWx;
 using MyApi.Domain.DomainServices.WorkOrders;
 using MyApi.Application.Identities;
+using MyApi.Application.Exports;
 using MyApi.HttpApi.Extensions;
 using Serilog;
 
@@ -70,6 +71,7 @@ builder.Services.AddCorpWxService(builder.Configuration);
 //业务服务
 builder.Services.ConfigureScrutor();
 builder.Services.AddHostedService<UserPermissionPreWarmBackgroundService>();
+builder.Services.AddHostedService<ExportTaskBackgroundService>();
 
 //配置管道
 var app = builder.Build();
