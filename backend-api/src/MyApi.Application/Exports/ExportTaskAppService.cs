@@ -12,15 +12,18 @@ public class ExportTaskAppService : IExportTaskAppService
 {
     private readonly ICurrentUser _currentUser;
     private readonly IFreeSql _freeSql;
+    private readonly IExportTaskNotifier _notifier;
     private readonly IReadOnlyDictionary<string, IExportProvider> _providers;
 
     public ExportTaskAppService(
         IFreeSql freeSql,
         IEnumerable<IExportProvider> providers,
-        ICurrentUser currentUser)
+        ICurrentUser currentUser,
+        IExportTaskNotifier notifier)
     {
         _freeSql = freeSql;
         _currentUser = currentUser;
+        _notifier = notifier;
         _providers = providers.ToDictionary(x => x.ModuleKey, StringComparer.OrdinalIgnoreCase);
     }
 
@@ -59,6 +62,7 @@ public class ExportTaskAppService : IExportTaskAppService
         };
 
         await _freeSql.Insert(task).ExecuteAffrowsAsync();
+        await _notifier.NotifyTaskChangedAsync(task.CreatorUserId, task.ModuleKey, ToChangedMessage(task));
         return ToDto(task);
     }
 
@@ -112,6 +116,18 @@ public class ExportTaskAppService : IExportTaskAppService
         var name = inputName.IsNullOrWhiteSpace() ? $"{moduleName}导出" : inputName!.Trim();
         name = Path.GetInvalidFileNameChars().Aggregate(name, (current, c) => current.Replace(c, '_'));
         return $"{name}_{now:yyyyMMddHHmmss}.csv";
+    }
+
+    private static ExportTaskChangedMessage ToChangedMessage(ExportTask task)
+    {
+        return new ExportTaskChangedMessage
+        {
+            TaskId = task.Id,
+            ModuleKey = task.ModuleKey,
+            Status = task.Status,
+            ChangedAt = task.LastModificationTime,
+            ErrorMessage = task.ErrorMessage
+        };
     }
 
     private static ExportTaskDto ToDto(ExportTask task)

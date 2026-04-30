@@ -11,6 +11,7 @@ using MyApi.Domain.DomainServices.WorkOrders;
 using MyApi.Application.Identities;
 using MyApi.Application.Exports;
 using MyApi.HttpApi.Extensions;
+using MyApi.HttpApi.Hubs;
 using Serilog;
 
 Log.Logger = new LoggerConfiguration()
@@ -58,6 +59,8 @@ builder.Services.ConfigureDataSeed();
 builder.Services.AddLoginLog();
 builder.Services.AddOperationLog(builder.Configuration);
 builder.Services.ConfigureUpload(builder.Configuration);
+builder.Services.AddSignalR();
+builder.Services.AddSingleton<IExportTaskNotifier, ExportTaskSignalRNotifier>();
 
 builder.Services.AddFreeRedis(builder.Configuration);
 builder.Services.AddSingleton<PdfAntiCounterfeitService>();
@@ -82,6 +85,7 @@ app.UseAuthorization();
 
 app.MapScalar();
 app.MapControllers();
+app.MapHub<ExportTaskHub>("/hub/export-tasks");
 app.UseUploadHub();
 
 app.Run();

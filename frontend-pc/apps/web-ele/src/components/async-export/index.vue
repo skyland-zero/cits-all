@@ -1,9 +1,13 @@
 <script lang="ts" setup>
-import { computed, onMounted, ref, watch } from 'vue';
+import type { HubConnection } from '@microsoft/signalr';
 
-import { useIntervalFn } from '@vueuse/core';
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
+
+import { useDebounceFn, useIntervalFn } from '@vueuse/core';
+import { HubConnectionBuilder, LogLevel } from '@microsoft/signalr';
 
 import { SvgDownloadIcon } from '@vben/icons';
+import { useAccessStore } from '@vben/stores';
 
 import {
   ElButton,
@@ -37,12 +41,21 @@ interface Props {
   query?: Record<string, unknown>;
 }
 
+interface ExportTaskChangedMessage {
+  changedAt: string;
+  errorMessage?: null | string;
+  moduleKey: string;
+  status: ExportTaskStatus;
+  taskId: string;
+}
+
 const props = withDefaults(defineProps<Props>(), {
   fields: () => [],
   fileName: '',
   query: () => ({}),
 });
 
+const accessStore = useAccessStore();
 const visible = ref(false);
 const fieldsLoading = ref(false);
 const queueLoading = ref(false);
@@ -50,6 +63,9 @@ const creating = ref(false);
 const fieldOptions = ref<ExportFieldDto[]>([]);
 const selectedFields = ref<string[]>([]);
 const tasks = ref<ExportTaskDto[]>([]);
+const hubConnection = ref<HubConnection>();
+const signalRReady = ref(false);
+let signalRConnecting: null | Promise<void> = null;
 
 const statusMeta: Record<
   ExportTaskStatus,
@@ -62,10 +78,6 @@ const statusMeta: Record<
 };
 
 const selectedCount = computed(() => selectedFields.value.length);
-
-const hasRunningTask = computed(() =>
-  tasks.value.some((task) => task.status === 0 || task.status === 1),
-);
 
 const formatFileSize = (size: number) => {
   if (!size) {
@@ -89,6 +101,18 @@ const formatTime = (value?: null | string) => {
   }
 
   return value.replace('T', ' ').slice(0, 19);
+};
+
+const selectAllFields = () => {
+  selectedFields.value = fieldOptions.value.map((field) => field.key);
+};
+
+const invertSelectedFields = () => {
+  const selectedFieldSet = new Set(selectedFields.value);
+
+  selectedFields.value = fieldOptions.value
+    .filter((field) => !selectedFieldSet.has(field.key))
+    .map((field) => field.key);
 };
 
 const loadFields = async () => {
@@ -123,9 +147,129 @@ const loadQueue = async () => {
   }
 };
 
+const scheduleLoadQueue = useDebounceFn(() => {
+  if (visible.value) {
+    void loadQueue();
+  }
+}, 300);
+
+const { pause, resume } = useIntervalFn(loadQueue, 5000, {
+  immediate: false,
+});
+
+const syncPollingState = () => {
+  if (!visible.value || signalRReady.value) {
+    pause();
+    return;
+  }
+
+  resume();
+};
+
+const createHubConnection = () => {
+  return new HubConnectionBuilder()
+    .withUrl(`/hub/export-tasks?moduleKey=${encodeURIComponent(props.moduleKey)}`, {
+      accessTokenFactory: () => accessStore.accessToken ?? '',
+    })
+    .withAutomaticReconnect()
+    .configureLogging(LogLevel.Error)
+    .build();
+};
+
+const registerHubEvents = (connection: HubConnection) => {
+  connection.on('ExportTaskChanged', (message: ExportTaskChangedMessage) => {
+    if (message.moduleKey.toLowerCase() !== props.moduleKey.toLowerCase()) {
+      return;
+    }
+
+    scheduleLoadQueue();
+  });
+
+  connection.onreconnecting(() => {
+    if (hubConnection.value !== connection) {
+      return;
+    }
+
+    signalRReady.value = false;
+    syncPollingState();
+  });
+
+  connection.onreconnected(() => {
+    if (hubConnection.value !== connection) {
+      return;
+    }
+
+    signalRReady.value = true;
+    pause();
+    void loadQueue();
+  });
+
+  connection.onclose(() => {
+    if (hubConnection.value !== connection) {
+      return;
+    }
+
+    signalRReady.value = false;
+    hubConnection.value = undefined;
+    signalRConnecting = null;
+    syncPollingState();
+  });
+};
+
+const ensureSignalRConnection = async () => {
+  if (hubConnection.value && signalRReady.value) {
+    return;
+  }
+
+  if (signalRConnecting) {
+    return signalRConnecting;
+  }
+
+  signalRConnecting = (async () => {
+    const connection = createHubConnection();
+    registerHubEvents(connection);
+    hubConnection.value = connection;
+
+    try {
+      await connection.start();
+      signalRReady.value = true;
+      pause();
+      await loadQueue();
+    } catch (error) {
+      console.error('Failed to initialize export task signalR', error);
+      signalRReady.value = false;
+      hubConnection.value = undefined;
+      await connection.stop().catch(() => undefined);
+      syncPollingState();
+    } finally {
+      signalRConnecting = null;
+    }
+  })();
+
+  return signalRConnecting;
+};
+
+const stopSignalRConnection = async () => {
+  const connection = hubConnection.value;
+  hubConnection.value = undefined;
+  signalRReady.value = false;
+  signalRConnecting = null;
+
+  if (!connection) {
+    return;
+  }
+
+  connection.off('ExportTaskChanged');
+  await connection.stop().catch((error) => {
+    console.error('Failed to stop export task signalR', error);
+  });
+};
+
 const open = async () => {
   visible.value = true;
   await Promise.all([loadFields(), loadQueue()]);
+  await ensureSignalRConnection();
+  syncPollingState();
 };
 
 const createTask = async () => {
@@ -157,31 +301,15 @@ const downloadTask = async (task: ExportTaskDto) => {
   }
 };
 
-const { pause, resume } = useIntervalFn(loadQueue, 5000, {
-  immediate: false,
-});
-
 watch(
   () => visible.value,
   (nextVisible) => {
-    if (nextVisible) {
-      resume();
-    } else {
+    if (!nextVisible) {
       pause();
+      void stopSignalRConnection();
     }
   },
 );
-
-watch(hasRunningTask, (running) => {
-  if (visible.value && running) {
-    resume();
-    return;
-  }
-
-  if (!running) {
-    pause();
-  }
-});
 
 onMounted(() => {
   if (props.fields.length > 0) {
@@ -190,6 +318,11 @@ onMounted(() => {
       .filter((field) => field.selected)
       .map((field) => field.key);
   }
+});
+
+onUnmounted(() => {
+  pause();
+  void stopSignalRConnection();
 });
 </script>
 
@@ -204,15 +337,41 @@ onMounted(() => {
     destroy-on-close
     draggable
     title="导出队列"
-    width="760"
+    width="860"
   >
     <div class="async-export">
       <section class="async-export__fields">
         <div class="async-export__section-head">
-          <span>导出字段</span>
-          <span>{{ selectedCount }}/{{ fieldOptions.length }}</span>
+          <div class="async-export__section-title">
+            <span>导出字段</span>
+            <span class="async-export__section-extra">
+              {{ selectedCount }}/{{ fieldOptions.length }}
+            </span>
+          </div>
+          <div class="async-export__field-actions">
+            <ElButton
+              :disabled="fieldOptions.length === 0"
+              plain
+              size="small"
+              @click="selectAllFields"
+            >
+              全选
+            </ElButton>
+            <ElButton
+              :disabled="fieldOptions.length === 0"
+              plain
+              size="small"
+              @click="invertSelectedFields"
+            >
+              反选
+            </ElButton>
+          </div>
         </div>
-        <ElScrollbar height="178px" v-loading="fieldsLoading">
+        <ElScrollbar
+          class="async-export__scrollbar"
+          height="100%"
+          v-loading="fieldsLoading"
+        >
           <ElCheckboxGroup v-model="selectedFields" class="async-export__checks">
             <ElCheckbox
               v-for="field in fieldOptions"
@@ -223,22 +382,14 @@ onMounted(() => {
             </ElCheckbox>
           </ElCheckboxGroup>
         </ElScrollbar>
-        <div class="async-export__actions">
-          <ElButton :loading="creating" type="primary" @click="createTask">
-            创建导出任务
-          </ElButton>
-          <ElButton :loading="queueLoading" @click="loadQueue">
-            刷新队列
-          </ElButton>
-        </div>
       </section>
 
       <section class="async-export__queue" v-loading="queueLoading">
         <div class="async-export__section-head">
-          <span>{{ moduleName }}导出记录</span>
-          <span>最近 20 条</span>
+          <span>导出记录</span>
+          <span class="async-export__section-extra">最近 20 条</span>
         </div>
-        <ElScrollbar height="260px">
+        <ElScrollbar class="async-export__scrollbar" height="100%">
           <ElEmpty v-if="tasks.length === 0" description="暂无导出任务" />
           <div v-else class="async-export__list">
             <div
@@ -277,26 +428,40 @@ onMounted(() => {
         </ElScrollbar>
       </section>
     </div>
+
+    <template #footer>
+      <div class="dialog-footer async-export__footer">
+        <ElButton :loading="creating" type="primary" @click="createTask">
+          创建导出任务
+        </ElButton>
+        <ElButton :loading="queueLoading" @click="loadQueue">
+          刷新队列
+        </ElButton>
+      </div>
+    </template>
   </ElDialog>
 </template>
 
 <style scoped>
 .async-export {
   display: grid;
-  grid-template-columns: 250px minmax(0, 1fr);
+  grid-template-columns: 320px minmax(0, 1fr);
   gap: 20px;
+  height: min(560px, calc(100vh - 180px));
+  overflow: hidden;
 }
 
-.async-export__fields {
-  min-width: 0;
-}
-
+.async-export__fields,
 .async-export__queue {
+  display: flex;
   min-width: 0;
+  min-height: 0;
+  flex-direction: column;
 }
 
 .async-export__section-head {
   display: flex;
+  flex: 0 0 auto;
   align-items: center;
   justify-content: space-between;
   margin-bottom: 12px;
@@ -305,21 +470,57 @@ onMounted(() => {
   font-weight: 600;
 }
 
-.async-export__section-head span:last-child {
+.async-export__section-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.async-export__section-extra {
   color: #6b7280;
   font-size: 12px;
   font-weight: 400;
 }
 
-.async-export__checks {
-  display: grid;
-  gap: 8px;
+.async-export__field-actions {
+  display: flex;
+  flex: 0 0 auto;
+  gap: 6px;
 }
 
-.async-export__actions {
+.async-export__field-actions :deep(.el-button + .el-button) {
+  margin-left: 0;
+}
+
+.async-export__scrollbar {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.async-export__checks {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px 12px;
+}
+
+.async-export__checks :deep(.el-checkbox) {
+  min-width: 0;
+  margin-right: 0;
+}
+
+.async-export__checks :deep(.el-checkbox__label) {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.async-export__footer {
   display: flex;
+  flex-wrap: wrap;
   gap: 8px;
-  margin-top: 14px;
+  justify-content: flex-end;
+  background: var(--el-bg-color);
 }
 
 .async-export__list {
@@ -367,6 +568,11 @@ onMounted(() => {
 
 @media (max-width: 768px) {
   .async-export {
+    grid-template-columns: 1fr;
+    height: min(640px, calc(100vh - 160px));
+  }
+
+  .async-export__checks {
     grid-template-columns: 1fr;
   }
 }

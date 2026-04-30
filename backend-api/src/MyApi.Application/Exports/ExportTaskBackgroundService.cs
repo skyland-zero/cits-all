@@ -3,6 +3,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using MyApi.Application.Exports.Dto;
 using MyApi.Domain.DomainServices.FileUpload;
 using MyApi.Domain.Exports;
 using MyApi.Domain.Shared.Exports;
@@ -53,6 +54,7 @@ public class ExportTaskBackgroundService : BackgroundService
         var freeSql = scope.ServiceProvider.GetRequiredService<IFreeSql>();
         var storage = scope.ServiceProvider.GetRequiredService<IStorageProvider>();
         var configuration = scope.ServiceProvider.GetRequiredService<IConfiguration>();
+        var notifier = scope.ServiceProvider.GetRequiredService<IExportTaskNotifier>();
         var providers = scope.ServiceProvider.GetServices<IExportProvider>()
             .ToDictionary(x => x.ModuleKey, StringComparer.OrdinalIgnoreCase);
 
@@ -69,6 +71,7 @@ public class ExportTaskBackgroundService : BackgroundService
         if (!providers.TryGetValue(task.ModuleKey, out var provider))
         {
             await MarkFailedAsync(freeSql, task, "导出模块未注册", cancellationToken);
+            await NotifyTaskChangedAsync(notifier, task, cancellationToken);
             return true;
         }
 
@@ -76,6 +79,7 @@ public class ExportTaskBackgroundService : BackgroundService
         task.StartedTime = DateTime.Now;
         task.LastModificationTime = DateTime.Now;
         await freeSql.Update<ExportTask>().SetSource(task).ExecuteAffrowsAsync(cancellationToken);
+        await NotifyTaskChangedAsync(notifier, task, cancellationToken);
 
         try
         {
@@ -103,14 +107,35 @@ public class ExportTaskBackgroundService : BackgroundService
             task.LastModificationTime = DateTime.Now;
             task.ErrorMessage = null;
             await freeSql.Update<ExportTask>().SetSource(task).ExecuteAffrowsAsync(cancellationToken);
+            await NotifyTaskChangedAsync(notifier, task, cancellationToken);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "导出任务处理失败: {TaskId}", task.Id);
             await MarkFailedAsync(freeSql, task, ex.Message, cancellationToken);
+            await NotifyTaskChangedAsync(notifier, task, cancellationToken);
         }
 
         return true;
+    }
+
+    private static Task NotifyTaskChangedAsync(
+        IExportTaskNotifier notifier,
+        ExportTask task,
+        CancellationToken cancellationToken)
+    {
+        return notifier.NotifyTaskChangedAsync(
+            task.CreatorUserId,
+            task.ModuleKey,
+            new ExportTaskChangedMessage
+            {
+                TaskId = task.Id,
+                ModuleKey = task.ModuleKey,
+                Status = task.Status,
+                ChangedAt = task.LastModificationTime,
+                ErrorMessage = task.ErrorMessage
+            },
+            cancellationToken);
     }
 
     private static async Task MarkFailedAsync(
