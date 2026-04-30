@@ -3,15 +3,12 @@
 import { computed, onMounted, reactive, ref, watch } from 'vue';
 
 import {
-  Fullscreen,
   Plus as MdiAdd,
   CircleX as MdiDelete,
   UserRoundPen as MdiEdit,
   RotateCw as MdiReset,
   Search as MdiSearch,
   InspectionPanel as MdiViewDashboardEdit,
-  Minimize2,
-  Settings,
 } from '@vben/icons';
 
 import {
@@ -33,17 +30,16 @@ import {
   pageApi,
   setMenusApi,
 } from '#/api/permission/roles';
-import { AsyncExport, MyContainer } from '#/components';
+import { AsyncExport, MyContainer, TableColumnSetting } from '#/components';
 import type { ExportFieldDto } from '#/api/export/tasks';
+import {
+  useTableColumnSetting,
+  type TableColumnSettingColumn,
+} from '#/composables/useTableColumnSetting';
 
 import EditMenus from './components/edit-menus.vue';
 import Write from './components/write.vue';
 import { actionEnum } from './enums';
-
-type MyContainerExpose = InstanceType<typeof MyContainer> & {
-  isFullscreen?: boolean;
-  toggleFullscreen?: () => Promise<void> | void;
-};
 
 const tableData = ref<any>([]);
 const currentRow = ref<any | null>(null);
@@ -52,7 +48,6 @@ const actionType = ref(actionEnum.none);
 const dialogTitle = ref('');
 const writeRef = ref<InstanceType<typeof Write>>();
 const setMenusRef = ref<InstanceType<typeof EditMenus>>();
-const containerRef = ref<MyContainerExpose>();
 const saveLoading = ref(false);
 const loading = ref(false);
 const roleExportFields: ExportFieldDto[] = [
@@ -63,9 +58,22 @@ const roleExportFields: ExportFieldDto[] = [
   { key: 'isStatic', label: '静态角色', selected: false },
 ];
 
-const isListFullscreen = computed(() =>
-  Boolean(containerRef.value?.isFullscreen),
-);
+const roleTableColumnDefs: TableColumnSettingColumn[] = [
+  { key: 'name', label: '角色名称', prop: 'name', visible: true },
+  { key: 'code', label: '角色编码', prop: 'code', visible: true },
+  { key: 'description', label: '说明', prop: 'description', visible: true },
+];
+
+const {
+  columns: tableColumns,
+  resetOrder: resetTableColumnOrder,
+  visibleColumns,
+} = useTableColumnSetting({
+  columns: roleTableColumnDefs,
+  pageKey: 'roles',
+  storageKey: 'permission',
+});
+
 const exportQuery = computed<Record<string, unknown>>(() => ({
   ...formSearchData,
 }));
@@ -149,14 +157,6 @@ const onDelete = (row: any) => {
   dialogTitle.value = '提示';
   currentRow.value = row;
   dialogFormVisible.value = true;
-};
-
-const onTableSetting = () => {
-  ElMessage.info('列表设置功能待接入');
-};
-
-const onToggleFullscreen = () => {
-  containerRef.value?.toggleFullscreen?.();
 };
 
 /**
@@ -259,7 +259,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <MyContainer ref="containerRef" :show-footer="true" :show-header="true">
+  <MyContainer :show-footer="true" :show-header="true">
     <template #header>
       <ElForm
         :inline="true"
@@ -304,16 +304,12 @@ onMounted(() => {
             module-key="basic.role"
             module-name="角色"
           />
-          <ElButton
-            :icon="isListFullscreen ? Minimize2 : Fullscreen"
-            plain
-            @click="onToggleFullscreen"
-          >
-            {{ isListFullscreen ? '退出全屏' : '全屏' }}
-          </ElButton>
-          <ElButton :icon="Settings" plain @click="onTableSetting">
-            列表设置
-          </ElButton>
+          <TableColumnSetting
+            v-model:columns="tableColumns"
+            button-text="列表设置"
+            title="列表设置"
+            @reset-order="resetTableColumnOrder"
+          />
         </div>
       </div>
     </template>
@@ -325,9 +321,16 @@ onMounted(() => {
       row-key="id"
       v-loading="loading"
     >
-      <ElTableColumn fixed label="角色名称" prop="name" />
-      <ElTableColumn label="角色编码" prop="code" />
-      <ElTableColumn label="说明" prop="description" />
+      <ElTableColumn
+        v-for="column in visibleColumns"
+        :key="column.key"
+        :align="column.align"
+        :fixed="column.fixed"
+        :label="column.label"
+        :min-width="column.minWidth"
+        :prop="column.prop"
+        :width="column.width"
+      />
       <ElTableColumn
         align="center"
         class="operation"
