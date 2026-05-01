@@ -281,3 +281,6 @@ src/NextApi.Blazor.Server.Tiered/Logs/*
 # IdentityServer temp files
 tempkey.rsa
 tempkey.jwk
+
+# Local database file used by MyApi.HttpApi
+/src/MyApi.HttpApi/cits.db
