@@ -176,7 +176,8 @@ public class UserPermissionAppService : IUserPermissionAppService
                             Order = x.Order,
                             Title = x.Name,
                             AffixTab = x.AffixTab,
-                            Icon = x.Icon
+                            Icon = x.Icon,
+                            HideInMenu = x.HideInMenu
                         }
                     };
                 }).ToList();

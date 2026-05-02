@@ -125,6 +125,9 @@ public class SystemDataSeedContributor : BackgroundService
             new() { Id = Guid.Parse("f6e804b2-0ea7-e13a-7787-b03c1b505210"), Name = "服务器监控", RouteName = "ServerMonitor", Path = "monitor/server/index" },
             new() { Id = Guid.Parse("f6e804b2-0ea7-e13a-7787-b03c1b505211"), Name = "登录日志", RouteName = "LoginLog", Path = "monitor/login-log/index" },
             new() { Id = Guid.Parse("f6e804b2-0ea7-e13a-7787-b03c1b505212"), Name = "操作日志", RouteName = "OperationLog", Path = "monitor/operation-log/index" },
+            new() { Id = Guid.Parse("f6e804b2-0ea7-e13a-7787-b03c1b505213"), Name = "数据字典", RouteName = "Dict", Path = "system/dict/index" },
+            new() { Id = Guid.Parse("f6e804b2-0ea7-e13a-7787-b03c1b505214"), Name = "字典数据", RouteName = "DictItems", Path = "system/dict/item" },
+            new() { Id = Guid.Parse("f6e804b2-0ea7-e13a-7787-b03c1b505215"), Name = "任务中心", RouteName = "Jobs", Path = "system/jobs/index" },
         };
 
         foreach (var page in pages)
@@ -302,6 +305,42 @@ public class SystemDataSeedContributor : BackgroundService
                 Level = 2,
                 Order = 1,
                 PageId = Guid.Parse("f6e804b2-0ea7-e13a-7787-b03c1b505203")
+            },
+            new()
+            {
+                Id = Guid.Parse("f6e804b2-0ea7-e13a-7787-b03c1b505112"),
+                ParentId = Guid.Parse("f6e804b2-0ea7-e13a-7787-b03c1b505110"),
+                Name = "数据字典",
+                Path = "/system/dict",
+                Icon = "lucide:book-open",
+                Type = IdentityMenuType.Menu,
+                Level = 2,
+                Order = 2,
+                PageId = Guid.Parse("f6e804b2-0ea7-e13a-7787-b03c1b505213")
+            },
+            new()
+            {
+                Id = Guid.Parse("f6e804b2-0ea7-e13a-7787-b03c1b505113"),
+                ParentId = Guid.Parse("f6e804b2-0ea7-e13a-7787-b03c1b505110"),
+                Name = "字典数据",
+                Path = "/system/dict/items/:id",
+                Type = IdentityMenuType.Menu,
+                Level = 2,
+                Order = 3,
+                HideInMenu = true,
+                PageId = Guid.Parse("f6e804b2-0ea7-e13a-7787-b03c1b505214")
+            },
+            new()
+            {
+                Id = Guid.Parse("f6e804b2-0ea7-e13a-7787-b03c1b505114"),
+                ParentId = Guid.Parse("f6e804b2-0ea7-e13a-7787-b03c1b505110"),
+                Name = "任务中心",
+                Path = "/system/jobs",
+                Icon = "lucide:calendar-clock",
+                Type = IdentityMenuType.Menu,
+                Level = 2,
+                Order = 4,
+                PageId = Guid.Parse("f6e804b2-0ea7-e13a-7787-b03c1b505215")
             },
             // Group: 系统监控
             new()

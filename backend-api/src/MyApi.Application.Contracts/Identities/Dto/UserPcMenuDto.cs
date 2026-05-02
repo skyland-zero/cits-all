@@ -40,5 +40,8 @@ public class UserPcMenuMetaDto
     public string? Icon { get; set; }
 
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public bool? HideInMenu { get; set; }
+
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public bool? NoBasicLayout { get; set; } = false;
 }

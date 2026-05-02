@@ -19,6 +19,35 @@ import { useAuthStore } from '#/store';
 import { refreshTokenApi } from './core';
 
 const { apiURL } = useAppConfig(import.meta.env, import.meta.env.PROD);
+const LOGIN_EXPIRED_MESSAGE = '登录认证过期，请重新登录后继续。';
+
+function createLoginExpiredError(cause: unknown) {
+  return Object.assign(new Error(LOGIN_EXPIRED_MESSAGE), {
+    cause,
+    response: {
+      data: { message: LOGIN_EXPIRED_MESSAGE },
+      status: 401,
+    },
+  });
+}
+
+function getResponseErrorMessage(responseData: any) {
+  const error = responseData?.error;
+
+  if (typeof error === 'string') {
+    return error;
+  }
+
+  if (typeof error?.message === 'string') {
+    return error.message;
+  }
+
+  if (typeof responseData?.message === 'string') {
+    return responseData.message;
+  }
+
+  return '';
+}
 
 function createRequestClient(baseURL: string, options?: RequestClientOptions) {
   const client = new RequestClient({
@@ -50,9 +79,16 @@ function createRequestClient(baseURL: string, options?: RequestClientOptions) {
    */
   async function doRefreshToken() {
     const accessStore = useAccessStore();
-    const { accessToken, refreshToken } = await refreshTokenApi(
-      accessStore.refreshToken,
-    );
+    let accessToken: string;
+    let refreshToken: string;
+
+    try {
+      const result = await refreshTokenApi(accessStore.refreshToken);
+      accessToken = result.accessToken;
+      refreshToken = result.refreshToken;
+    } catch (error) {
+      throw createLoginExpiredError(error);
+    }
 
     accessStore.setAccessToken(accessToken);
     accessStore.setRefreshToken(refreshToken);
@@ -103,7 +139,7 @@ function createRequestClient(baseURL: string, options?: RequestClientOptions) {
       // 这里可以根据业务进行定制,你可以拿到 error 内的信息进行定制化处理，根据不同的 code 做不同的提示，而不是直接使用 message.error 提示 msg
       // 当前mock接口返回的错误字段是 error 或者 message
       const responseData = error?.response?.data ?? {};
-      const errorMessage = responseData?.error ?? responseData?.message ?? '';
+      const errorMessage = getResponseErrorMessage(responseData);
       // 如果没有错误信息，则会根据状态码进行提示
       ElMessage.error(errorMessage || msg);
     }),

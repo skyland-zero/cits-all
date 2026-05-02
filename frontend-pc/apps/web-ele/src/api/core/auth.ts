@@ -1,5 +1,17 @@
 import { baseRequestClient, requestClient } from '#/api/request';
 
+type RawResponse<T> = {
+  data: T;
+};
+
+function hasRawResponseData<T>(
+  response: RawResponse<T> | T,
+): response is RawResponse<T> {
+  return (
+    typeof response === 'object' && response !== null && 'data' in response
+  );
+}
+
 export namespace AuthApi {
   /** 登录接口参数 */
   export interface LoginParams {
@@ -30,9 +42,15 @@ export async function loginApi(data: AuthApi.LoginParams) {
  * 刷新accessToken
  */
 export async function refreshTokenApi(refreshToken: null | string) {
-  return baseRequestClient.post<AuthApi.RefreshTokenResult>(
+  const response = await baseRequestClient.post<
+    AuthApi.RefreshTokenResult | RawResponse<AuthApi.RefreshTokenResult>
+  >(
     `/basic/account/refresh-token?refreshToken=${encodeURIComponent(refreshToken ?? '')}`,
   );
+
+  return hasRawResponseData<AuthApi.RefreshTokenResult>(response)
+    ? response.data
+    : response;
 }
 
 /**

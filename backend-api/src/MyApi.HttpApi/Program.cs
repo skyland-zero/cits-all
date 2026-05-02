@@ -63,6 +63,7 @@ builder.Services.AddSignalR();
 builder.Services.AddSingleton<IExportTaskNotifier, ExportTaskSignalRNotifier>();
 
 builder.Services.AddFreeRedis(builder.Configuration);
+builder.Services.AddHangfireService(builder.Configuration);
 builder.Services.AddSingleton<PdfAntiCounterfeitService>();
 builder.Services.AddSingleton<WorkOrderPdfGenerator>();
 
