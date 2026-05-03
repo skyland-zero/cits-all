@@ -83,6 +83,15 @@ const coreRoutes: RouteRecordRaw[] = [
         },
       },
       {
+        name: 'ForceChangePassword',
+        path: 'change-password',
+        component: () =>
+          import('#/views/_core/authentication/force-change-password.vue'),
+        meta: {
+          title: '修改初始密码',
+        },
+      },
+      {
         name: 'Register',
         path: 'register',
         component: () => import('#/views/_core/authentication/register.vue'),

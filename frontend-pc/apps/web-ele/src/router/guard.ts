@@ -10,6 +10,14 @@ import { useAuthStore } from '#/store';
 
 import { generateAccess } from './access';
 
+const FORCE_CHANGE_PASSWORD_PATH = '/auth/change-password';
+
+type ForcePasswordUserInfo = {
+  homePath?: string;
+  mustChangePassword?: boolean;
+  roles?: string[];
+};
+
 /**
  * 通用守卫配置
  * @param router
@@ -50,12 +58,27 @@ function setupAccessGuard(router: Router) {
     const userStore = useUserStore();
     const authStore = useAuthStore();
 
+    const getUserInfo = async () =>
+      (userStore.userInfo ||
+        (await authStore.fetchUserInfo())) as ForcePasswordUserInfo | null;
+
     // 基本路由，这些路由不需要进入权限拦截
     if (coreRouteNames.includes(to.name as string)) {
+      if (accessStore.accessToken) {
+        const userInfo = await getUserInfo();
+        if (
+          userInfo?.mustChangePassword &&
+          to.path !== FORCE_CHANGE_PASSWORD_PATH
+        ) {
+          return FORCE_CHANGE_PASSWORD_PATH;
+        }
+      }
+
       if (to.path === LOGIN_PATH && accessStore.accessToken) {
+        const userInfo = await getUserInfo();
         return decodeURIComponent(
           (to.query?.redirect as string) ||
-            userStore.userInfo?.homePath ||
+            userInfo?.homePath ||
             preferences.app.defaultHomePath,
         );
       }
@@ -85,6 +108,18 @@ function setupAccessGuard(router: Router) {
       return to;
     }
 
+    const userInfo = await getUserInfo();
+    if (!userInfo) {
+      return LOGIN_PATH;
+    }
+
+    if (
+      userInfo?.mustChangePassword &&
+      to.path !== FORCE_CHANGE_PASSWORD_PATH
+    ) {
+      return FORCE_CHANGE_PASSWORD_PATH;
+    }
+
     // 是否已经生成过动态路由
     if (accessStore.isAccessChecked) {
       return true;
@@ -92,7 +127,6 @@ function setupAccessGuard(router: Router) {
 
     // 生成路由表
     // 当前登录用户拥有的角色标识列表
-    const userInfo = userStore.userInfo || (await authStore.fetchUserInfo());
     const userRoles = userInfo.roles ?? [];
 
     // 生成菜单和路由

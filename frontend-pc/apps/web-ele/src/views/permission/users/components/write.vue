@@ -11,6 +11,7 @@ import {
   ElMessage,
   ElOption,
   ElSelect,
+  ElSwitch,
   ElTreeSelect,
   type FormInstance,
   type FormRules,
@@ -37,6 +38,7 @@ const initData = () => ({
   passwordHashRecheck: '',
   organizationUnitId: '',
   mainRoleId: '',
+  isActive: true,
 });
 const formData = reactive(initData());
 
@@ -171,6 +173,14 @@ defineExpose({
           :value="item.value"
         />
       </ElSelect>
+    </ElFormItem>
+    <ElFormItem :label-width="formLabelWidth" label="启用：" prop="isActive">
+      <ElSwitch
+        v-model="formData.isActive"
+        active-text="启用"
+        inactive-text="禁用"
+        inline-prompt
+      />
     </ElFormItem>
     <div v-if="!formData.id">
       <ElFormItem

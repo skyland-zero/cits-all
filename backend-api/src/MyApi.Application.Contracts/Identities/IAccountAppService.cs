@@ -14,7 +14,9 @@ public interface IAccountAppService : IApplicationService
     ///     退出登录
     /// </summary>
     /// <returns></returns>
-    string Logout();
+    Task<string> LogoutAsync();
 
     Task<LoginOutput> RefreshTokenAsync(string refreshToken);
+
+    Task ChangePasswordAsync(ChangePasswordDto input);
 }

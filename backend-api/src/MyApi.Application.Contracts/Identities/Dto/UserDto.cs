@@ -23,6 +23,16 @@ public class UserDto : EntityDto<Guid>
     public bool IsActive { get; set; }
 
     /// <summary>
+    ///     是否必须修改密码
+    /// </summary>
+    public bool MustChangePassword { get; set; }
+
+    /// <summary>
+    ///     密码最后修改时间
+    /// </summary>
+    public DateTime? PasswordChangedTime { get; set; }
+
+    /// <summary>
     ///     组织架构Id
     /// </summary>
     public Guid OrganizationUnitId { get; set; }

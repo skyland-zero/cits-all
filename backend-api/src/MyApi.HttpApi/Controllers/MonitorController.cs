@@ -6,6 +6,7 @@ using FreeRedis;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Memory;
+using MyApi.Domain.Identities;
 
 namespace MyApi.HttpApi.Controllers;
 
@@ -60,15 +61,11 @@ public class MonitorController : BaseApiController
     {
         try
         {
-            const string key = "sys:online_users";
-            var now = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
-            var fiveMinutesAgo = now - (5 * 60);
-
-            // 清理 5 分钟前未活跃的用户
-            _redis.ZRemRangeByScore(key, "-inf", fiveMinutesAgo.ToString());
-            
-            // 统计剩下的成员数
-            return _redis.ZCard(key);
+            var now = DateTime.UtcNow;
+            var onlineAfter = now.AddMinutes(-5);
+            return _fsql.Select<IdentityOnlineUserSession>()
+                .Where(x => !x.IsRevoked && x.ExpireTime > now && x.LastActiveTime >= onlineAfter)
+                .Count();
         }
         catch
         {

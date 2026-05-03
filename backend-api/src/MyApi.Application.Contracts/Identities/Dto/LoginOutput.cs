@@ -11,4 +11,9 @@ public class LoginOutput
     ///     刷新令牌
     /// </summary>
     public string? RefreshToken { get; set; }
+
+    /// <summary>
+    ///     是否必须修改密码
+    /// </summary>
+    public bool MustChangePassword { get; set; }
 }

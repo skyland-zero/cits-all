@@ -10,6 +10,7 @@ using MyApi.Domain.DomainServices.CorpWx;
 using MyApi.Domain.DomainServices.WorkOrders;
 using MyApi.Application.Identities;
 using MyApi.Application.Exports;
+using MyApi.Application.Imports;
 using MyApi.HttpApi.Extensions;
 using MyApi.HttpApi.Hubs;
 using Serilog;
@@ -29,12 +30,10 @@ builder.Services.AddSerilogService(builder.Configuration);
 builder.Services.AddIdGenerator();
 builder.Services.ConfigureHybridCache(builder.Configuration);
 builder.Services.AddScoped<GlobalExceptionFilter>();
-builder.Services.AddScoped<OnlineUserFilter>();
 builder.Services.AddScoped<OperationLogFilter>();
 builder.Services.AddControllers(options =>
 {
     options.Filters.Add<GlobalExceptionFilter>();
-    options.Filters.Add<OnlineUserFilter>();
     options.Filters.Add<OperationLogFilter>();
     options.Conventions.Add(new RouteTokenTransformerConvention(new SlugifyParameterTransformer())); //路由转换为小写加下划线格式
 }).AddJsonOptions(options =>
@@ -76,6 +75,7 @@ builder.Services.AddCorpWxService(builder.Configuration);
 builder.Services.ConfigureScrutor();
 builder.Services.AddHostedService<UserPermissionPreWarmBackgroundService>();
 builder.Services.AddHostedService<ExportTaskBackgroundService>();
+builder.Services.AddHostedService<ImportTaskBackgroundService>();
 
 //配置管道
 var app = builder.Build();

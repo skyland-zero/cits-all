@@ -51,4 +51,9 @@ public class CurrentIdentityUserDto
     ///     是否已激活
     /// </summary>
     public bool IsActive { get; set; }
+
+    /// <summary>
+    ///     是否必须修改密码
+    /// </summary>
+    public bool MustChangePassword { get; set; }
 }

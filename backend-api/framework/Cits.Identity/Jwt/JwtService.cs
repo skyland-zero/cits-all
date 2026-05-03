@@ -50,13 +50,13 @@ public class JwtService
     ///     生成刷新token
     /// </summary>
     /// <returns></returns>
-    public async Task<string> CreateRefreshTokenAsync(Guid userId)
+    public async Task<string> CreateRefreshTokenAsync(Guid userId, Guid sessionId)
     {
         var token = _idGenerator.Create().ToString();
         var key = GetHashedKey(token);
         var hour = _configuration.GetRequiredSection("JWT:RefreshExpireHours").Get<double?>() ?? 48;
         var expire = TimeSpan.FromHours(hour);
-        await _cache.SetAsync(key, new RefreshTokenCacheModel(userId, expire)
+        await _cache.SetAsync(key, new RefreshTokenCacheModel(userId, sessionId, expire)
             , new HybridCacheEntryOptions
             {
                 Expiration = expire
@@ -69,11 +69,11 @@ public class JwtService
     /// </summary>
     /// <param name="token"></param>
     /// <returns></returns>
-    public async Task<(bool, Guid?)> ValidateRefreshTokenAsync(string? token)
+    public async Task<(bool, Guid?, Guid?)> ValidateRefreshTokenAsync(string? token)
     {
         if (token == null)
         {
-            return (false, null);
+            return (false, null, null);
         }
         var key = GetHashedKey(token);
         var cache = await _cache.GetOrCreateAsync<RefreshTokenCacheModel?>(key,
@@ -83,12 +83,12 @@ public class JwtService
                 Flags = HybridCacheEntryFlags.DisableLocalCacheWrite |
                         HybridCacheEntryFlags.DisableDistributedCacheWrite
             });
-        if (cache == null || cache.UserId == Guid.Empty) return (false, null);
+        if (cache == null || cache.UserId == Guid.Empty || cache.SessionId == Guid.Empty) return (false, null, null);
 
         //刷新token只能生效一次，判断过后即删除对应缓存
         await _cache.RemoveAsync(key);
         var effective = cache.Expire >= TimeSpan.Zero;
-        return (effective, cache.UserId);
+        return (effective, cache.UserId, cache.SessionId);
     }
 
     private string GetHashedKey(string value)

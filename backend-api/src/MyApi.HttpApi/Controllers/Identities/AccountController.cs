@@ -1,4 +1,5 @@
 ﻿using Cits;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MyApi.Application.Identities;
 using MyApi.Application.Identities.Dto;
@@ -21,14 +22,21 @@ public class AccountController : IdentityBaseApiController
     }
 
     [HttpPost("logout")]
-    public string Logout()
+    public Task<string> LogoutAsync()
     {
-        return _accountAppService.Logout();
+        return _accountAppService.LogoutAsync();
     }
 
     [HttpPost("refresh-token")]
     public async Task<LoginOutput> RefreshTokenAsync(string refreshToken)
     {
         return await _accountAppService.RefreshTokenAsync(refreshToken);
+    }
+
+    [Authorize]
+    [HttpPost("change-password")]
+    public async Task ChangePasswordAsync(ChangePasswordDto input)
+    {
+        await _accountAppService.ChangePasswordAsync(input);
     }
 }

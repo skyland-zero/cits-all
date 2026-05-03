@@ -33,7 +33,23 @@ public class IdentityUser : EntityBaseWithSoftDelete
     ///     是否已激活
     /// </summary>
     public bool IsActive { get; set; }
-    
+
+    /// <summary>
+    ///     是否必须先修改密码
+    /// </summary>
+    public bool MustChangePassword { get; set; }
+
+    /// <summary>
+    ///     密码最后修改时间
+    /// </summary>
+    public DateTime? PasswordChangedTime { get; set; }
+
+    /// <summary>
+    ///     安全戳，密码变更时刷新
+    /// </summary>
+    [MaxLength(64)]
+    public string SecurityStamp { get; set; } = Guid.NewGuid().ToString("N");
+     
     /// <summary>
     /// 角色
     /// </summary>

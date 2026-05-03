@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import type { NotificationItem } from '@vben/layouts';
 
-import { computed, ref, watch } from 'vue';
+import { computed, onMounted, ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
 
 import { AuthenticationLoginExpiredModal } from '@vben/common-ui';
@@ -20,60 +20,19 @@ import { openWindow } from '@vben/utils';
 
 import { $t } from '#/locales';
 import { useAuthStore } from '#/store';
+import { LoginAnnouncementPopup } from '#/components';
+import {
+  type AnnouncementDto,
+  getUnreadAnnouncements,
+  markAnnouncementRead,
+} from '#/api/system/announcements';
 import LoginForm from '#/views/_core/authentication/login.vue';
 
-const notifications = ref<NotificationItem[]>([
-  {
-    id: 1,
-    avatar: 'https://avatar.vercel.sh/vercel.svg?text=VB',
-    date: '3小时前',
-    isRead: true,
-    message: '描述信息描述信息描述信息',
-    title: '收到了 14 份新周报',
-  },
-  {
-    id: 2,
-    avatar: 'https://avatar.vercel.sh/1',
-    date: '刚刚',
-    isRead: false,
-    message: '描述信息描述信息描述信息',
-    title: '朱偏右 回复了你',
-  },
-  {
-    id: 3,
-    avatar: 'https://avatar.vercel.sh/1',
-    date: '2024-01-01',
-    isRead: false,
-    message: '描述信息描述信息描述信息',
-    title: '曲丽丽 评论了你',
-  },
-  {
-    id: 4,
-    avatar: 'https://avatar.vercel.sh/satori',
-    date: '1天前',
-    isRead: false,
-    message: '描述信息描述信息描述信息',
-    title: '代办提醒',
-  },
-  {
-    id: 5,
-    avatar: 'https://avatar.vercel.sh/satori',
-    date: '1天前',
-    isRead: false,
-    message: '描述信息描述信息描述信息',
-    title: '跳转Workspace示例',
-    link: '/workspace',
-  },
-  {
-    id: 6,
-    avatar: 'https://avatar.vercel.sh/satori',
-    date: '1天前',
-    isRead: false,
-    message: '描述信息描述信息描述信息',
-    title: '跳转外部链接示例',
-    link: 'https://doc.vben.pro',
-  },
-]);
+type AnnouncementNotificationItem = NotificationItem & {
+  announcementId?: string;
+};
+
+const notifications = ref<AnnouncementNotificationItem[]>([]);
 
 const router = useRouter();
 const userStore = useUserStore();
@@ -130,23 +89,60 @@ async function handleLogout() {
 }
 
 function handleNoticeClear() {
+  void Promise.all(
+    notifications.value
+      .filter((item) => !item.isRead && item.announcementId)
+      .map((item) => markAnnouncementRead(item.announcementId!)),
+  );
   notifications.value = [];
 }
 
-function markRead(id: number | string) {
+async function markRead(id: number | string) {
   const item = notifications.value.find((item) => item.id === id);
   if (item) {
+    if (!item.isRead && item.announcementId) {
+      await markAnnouncementRead(item.announcementId);
+    }
     item.isRead = true;
   }
 }
 
 function remove(id: number | string) {
+  void markRead(id);
   notifications.value = notifications.value.filter((item) => item.id !== id);
 }
 
 function handleMakeAll() {
+  void Promise.all(
+    notifications.value
+      .filter((item) => !item.isRead && item.announcementId)
+      .map((item) => markAnnouncementRead(item.announcementId!)),
+  );
   notifications.value.forEach((item) => (item.isRead = true));
 }
+
+function mapAnnouncementNotification(
+  item: AnnouncementDto,
+): AnnouncementNotificationItem {
+  return {
+    id: `announcement:${item.id}`,
+    announcementId: item.id,
+    avatar: 'https://avatar.vercel.sh/announcement.svg?text=公告',
+    date: item.publishTime || item.creationTime || '',
+    isRead: false,
+    message: item.summary || '系统公告',
+    title: item.title,
+  };
+}
+
+async function fetchNotifications() {
+  const announcements = await getUnreadAnnouncements();
+  notifications.value = announcements.map(mapAnnouncementNotification);
+}
+
+onMounted(() => {
+  void fetchNotifications();
+});
 watch(
   () => ({
     enable: preferences.app.watermark,
@@ -198,6 +194,7 @@ watch(
       >
         <LoginForm />
       </AuthenticationLoginExpiredModal>
+      <LoginAnnouncementPopup @changed="fetchNotifications" />
     </template>
     <template #lock-screen>
       <LockScreen :avatar @to-login="handleLogout" />

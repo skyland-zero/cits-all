@@ -13,6 +13,8 @@ import { defineStore } from 'pinia';
 import { getAccessCodesApi, getUserInfoApi, loginApi, logoutApi } from '#/api';
 import { $t } from '#/locales';
 
+const FORCE_CHANGE_PASSWORD_PATH = '/auth/change-password';
+
 export const useAuthStore = defineStore('auth', () => {
   const accessStore = useAccessStore();
   const userStore = useUserStore();
@@ -33,7 +35,8 @@ export const useAuthStore = defineStore('auth', () => {
     let userInfo: null | UserInfo = null;
     try {
       loginLoading.value = true;
-      const { accessToken, refreshToken } = await loginApi(params);
+      const { accessToken, mustChangePassword, refreshToken } =
+        await loginApi(params);
 
       // 如果成功获取到 accessToken
       if (accessToken) {
@@ -55,11 +58,15 @@ export const useAuthStore = defineStore('auth', () => {
         if (accessStore.loginExpired) {
           accessStore.setLoginExpired(false);
         } else {
-          onSuccess
-            ? await onSuccess?.()
-            : await router.push(
-                userInfo.homePath || preferences.app.defaultHomePath,
-              );
+          if (mustChangePassword) {
+            await router.push(FORCE_CHANGE_PASSWORD_PATH);
+          } else {
+            onSuccess
+              ? await onSuccess?.()
+              : await router.push(
+                  userInfo.homePath || preferences.app.defaultHomePath,
+                );
+          }
         }
 
         if (userInfo?.realName) {

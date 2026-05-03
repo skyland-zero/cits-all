@@ -8,6 +8,7 @@
     </PropertyGroup>
 
     <ItemGroup>
+        <PackageReference Include="ClosedXML" Version="0.105.0" />
         <ProjectReference Include="..\..\framework\Cits.Identity\Cits.Identity.csproj"/>
         <ProjectReference Include="..\MyApi.Application.Contracts\MyApi.Application.Contracts.csproj"/>
         <ProjectReference Include="..\MyApi.Domain.Shared\MyApi.Domain.Shared.csproj"/>

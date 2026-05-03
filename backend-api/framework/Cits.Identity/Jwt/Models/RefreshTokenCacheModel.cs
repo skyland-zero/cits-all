@@ -6,9 +6,10 @@ public class RefreshTokenCacheModel
     {
     }
 
-    public RefreshTokenCacheModel(Guid userId, TimeSpan expire)
+    public RefreshTokenCacheModel(Guid userId, Guid sessionId, TimeSpan expire)
     {
         UserId = userId;
+        SessionId = sessionId;
         Expire = expire;
     }
 
@@ -16,6 +17,11 @@ public class RefreshTokenCacheModel
     ///     用户id
     /// </summary>
     public Guid UserId { get; set; }
+
+    /// <summary>
+    ///     登录会话id
+    /// </summary>
+    public Guid SessionId { get; set; }
 
     /// <summary>
     ///     到期时间

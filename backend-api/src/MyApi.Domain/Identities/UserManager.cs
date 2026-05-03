@@ -7,15 +7,8 @@ namespace MyApi.Domain.Identities;
 
 public class UserManager : ISelfSingletonService
 {
-    private const int MaxAccessFailedCount = 5;
     private readonly HybridCache _hybridCache;
     private readonly IFreeSql _freeSql;
-
-    private readonly HybridCacheEntryOptions _lockedOutCacheEntryOptions = new()
-    {
-        Expiration = TimeSpan.FromMinutes(10),
-        LocalCacheExpiration = TimeSpan.FromMinutes(10)
-    };
 
     public UserManager(HybridCache hybridCache, IFreeSql freeSql)
     {
@@ -38,12 +31,13 @@ public class UserManager : ISelfSingletonService
     /// </summary>
     /// <param name="username"></param>
     /// <returns></returns>
-    public async Task<(bool, string)> IsLockedOutAsync(string username)
+    public async Task<(bool, string)> IsLockedOutAsync(string username, int lockoutMinutes)
     {
+        var lockoutOptions = BuildLockoutCacheOptions(lockoutMinutes);
         var cache = await _hybridCache.GetOrCreateAsync(
             GetLockoutEndCacheKey(username),
             _ => ValueTask.FromResult(new UserLockedOutCacheModel(username)),
-            _lockedOutCacheEntryOptions);
+            lockoutOptions);
 
         if (cache.LockoutEnd.HasValue && cache.LockoutEnd.Value > DateTimeOffset.Now)
         {
@@ -59,26 +53,29 @@ public class UserManager : ISelfSingletonService
     /// <param name="username"></param>
     /// <returns></returns>
     /// <exception cref="UserFriendlyException"></exception>
-    public async Task<int> AccessFailedAsync(string username)
+    public async Task<int> AccessFailedAsync(string username, int maxAccessFailedCount, int lockoutMinutes)
     {
+        maxAccessFailedCount = Math.Max(1, maxAccessFailedCount);
+        lockoutMinutes = Math.Max(1, lockoutMinutes);
+        var lockoutOptions = BuildLockoutCacheOptions(lockoutMinutes);
         var cntCacheKey = GetAccessFailedCountCacheKey(username);
         var cnt = await _hybridCache.GetOrCreateAsync(
             cntCacheKey,
             _ => ValueTask.FromResult(0),
-            _lockedOutCacheEntryOptions);
+            lockoutOptions);
         cnt++;
 
-        if (cnt >= MaxAccessFailedCount)
+        if (cnt >= maxAccessFailedCount)
         {
             await _hybridCache.SetAsync(
                 GetLockoutEndCacheKey(username),
-                new UserLockedOutCacheModel(username, DateTimeOffset.Now.AddMinutes(10)),
-                _lockedOutCacheEntryOptions);
-            throw new UserFriendlyException("密码错误次数过多，账户已锁定10分钟");
+                new UserLockedOutCacheModel(username, DateTimeOffset.Now.AddMinutes(lockoutMinutes)),
+                lockoutOptions);
+            throw new UserFriendlyException($"密码错误次数过多，账户已锁定{lockoutMinutes}分钟");
         }
 
-        await _hybridCache.SetAsync(cntCacheKey, cnt, _lockedOutCacheEntryOptions);
-        return MaxAccessFailedCount - cnt;
+        await _hybridCache.SetAsync(cntCacheKey, cnt, lockoutOptions);
+        return maxAccessFailedCount - cnt;
     }
 
     public async Task ResetAccessFailedCountAsync(string username)
@@ -95,5 +92,15 @@ public class UserManager : ISelfSingletonService
     private string GetLockoutEndCacheKey(string username)
     {
         return $"user_locked_out_{username}";
+    }
+
+    private static HybridCacheEntryOptions BuildLockoutCacheOptions(int lockoutMinutes)
+    {
+        var expiration = TimeSpan.FromMinutes(Math.Max(1, lockoutMinutes));
+        return new HybridCacheEntryOptions
+        {
+            Expiration = expiration,
+            LocalCacheExpiration = expiration
+        };
     }
 }

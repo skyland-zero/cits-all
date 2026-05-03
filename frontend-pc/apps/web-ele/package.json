@@ -28,6 +28,7 @@
   "dependencies": {
     "@element-plus/icons-vue": "^2.3.2",
     "@microsoft/signalr": "8.0.7",
+    "@tinymce/tinymce-vue": "^6.3.0",
     "@vben/access": "workspace:*",
     "@vben/common-ui": "workspace:*",
     "@vben/constants": "workspace:*",
@@ -44,8 +45,11 @@
     "@vben/utils": "workspace:*",
     "@vueuse/core": "catalog:",
     "dayjs": "catalog:",
+    "dompurify": "^3.4.2",
     "element-plus": "catalog:",
     "pinia": "catalog:",
+    "tinymce": "^8.5.0",
+    "tinymce-i18n": "^26.4.6",
     "vue": "catalog:",
     "vue-router": "catalog:"
   },

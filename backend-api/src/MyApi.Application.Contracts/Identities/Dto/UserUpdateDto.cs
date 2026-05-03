@@ -17,6 +17,11 @@ public class UserUpdateDto
     public string Surname { get; set; } = string.Empty;
 
     /// <summary>
+    ///     是否启用
+    /// </summary>
+    public bool IsActive { get; set; } = true;
+
+    /// <summary>
     ///     组织架构Ids
     /// </summary>
     public Guid OrganizationUnitId { get; set; }

@@ -1,4 +1,5 @@
 using Cits;
+using Cits.Domain.SystemSettings;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -105,7 +106,165 @@ public class SystemDataSeedContributor : BackgroundService
             await freeSql.Insert(userRole).ExecuteAffrowsAsync(cancellationToken);
         }
 
+        await SeedSystemSettingsAsync(freeSql, cancellationToken);
         await SeedMenusAsync(freeSql, role.Id, cancellationToken);
+    }
+
+    private static async Task SeedSystemSettingsAsync(IFreeSql freeSql, CancellationToken ct)
+    {
+        var settings = new List<SystemSetting>
+        {
+            new()
+            {
+                Id = Guid.Parse("f6e804b2-0ea7-e13a-7787-b03c1b505301"),
+                Key = "system.siteName",
+                Name = "系统名称",
+                Value = "Cits Admin",
+                ValueType = SystemSettingValueTypes.String,
+                Group = SystemSettingGroups.Basic,
+                Description = "浏览器标题、登录页和基础布局中展示的系统名称",
+                Sort = 1
+            },
+            new()
+            {
+                Id = Guid.Parse("f6e804b2-0ea7-e13a-7787-b03c1b505302"),
+                Key = "security.password.minLength",
+                Name = "密码最小长度",
+                Value = "8",
+                ValueType = SystemSettingValueTypes.Number,
+                Group = SystemSettingGroups.Security,
+                Description = "用户密码允许的最小字符长度",
+                Sort = 10
+            },
+            new()
+            {
+                Id = Guid.Parse("f6e804b2-0ea7-e13a-7787-b03c1b505303"),
+                Key = "security.password.requireUppercase",
+                Name = "密码要求大写字母",
+                Value = "false",
+                ValueType = SystemSettingValueTypes.Boolean,
+                Group = SystemSettingGroups.Security,
+                Description = "开启后密码必须包含至少一个大写字母",
+                Sort = 20
+            },
+            new()
+            {
+                Id = Guid.Parse("f6e804b2-0ea7-e13a-7787-b03c1b505304"),
+                Key = "security.password.requireLowercase",
+                Name = "密码要求小写字母",
+                Value = "false",
+                ValueType = SystemSettingValueTypes.Boolean,
+                Group = SystemSettingGroups.Security,
+                Description = "开启后密码必须包含至少一个小写字母",
+                Sort = 30
+            },
+            new()
+            {
+                Id = Guid.Parse("f6e804b2-0ea7-e13a-7787-b03c1b505305"),
+                Key = "security.password.requireDigit",
+                Name = "密码要求数字",
+                Value = "true",
+                ValueType = SystemSettingValueTypes.Boolean,
+                Group = SystemSettingGroups.Security,
+                Description = "开启后密码必须包含至少一个数字",
+                Sort = 40
+            },
+            new()
+            {
+                Id = Guid.Parse("f6e804b2-0ea7-e13a-7787-b03c1b505306"),
+                Key = "security.password.requireNonAlphanumeric",
+                Name = "密码要求特殊字符",
+                Value = "false",
+                ValueType = SystemSettingValueTypes.Boolean,
+                Group = SystemSettingGroups.Security,
+                Description = "开启后密码必须包含至少一个特殊字符",
+                Sort = 50
+            },
+            new()
+            {
+                Id = Guid.Parse("f6e804b2-0ea7-e13a-7787-b03c1b505307"),
+                Key = "security.login.maxFailedAttempts",
+                Name = "登录失败锁定次数",
+                Value = "5",
+                ValueType = SystemSettingValueTypes.Number,
+                Group = SystemSettingGroups.Security,
+                Description = "连续登录失败达到该次数后锁定账号",
+                Sort = 60
+            },
+            new()
+            {
+                Id = Guid.Parse("f6e804b2-0ea7-e13a-7787-b03c1b505308"),
+                Key = "security.login.lockoutMinutes",
+                Name = "登录锁定分钟数",
+                Value = "10",
+                ValueType = SystemSettingValueTypes.Number,
+                Group = SystemSettingGroups.Security,
+                Description = "账号被锁定后的自动解锁时间",
+                Sort = 70
+            },
+            new()
+            {
+                Id = Guid.Parse("f6e804b2-0ea7-e13a-7787-b03c1b505309"),
+                Key = "security.password.forceChangeInitial",
+                Name = "强制修改初始密码",
+                Value = "false",
+                ValueType = SystemSettingValueTypes.Boolean,
+                Group = SystemSettingGroups.Security,
+                Description = "开启后初始密码用户登录后必须先修改密码",
+                Sort = 80
+            },
+            new()
+            {
+                Id = Guid.Parse("f6e804b2-0ea7-e13a-7787-b03c1b505310"),
+                Key = "upload.maxFileSizeMb",
+                Name = "上传文件大小限制(MB)",
+                Value = "100",
+                ValueType = SystemSettingValueTypes.Number,
+                Group = SystemSettingGroups.Upload,
+                Description = "通用上传文件大小限制，后续可接入上传校验服务",
+                Sort = 10
+            },
+            new()
+            {
+                Id = Guid.Parse("f6e804b2-0ea7-e13a-7787-b03c1b505311"),
+                Key = "import.maxRows",
+                Name = "单次导入最大行数",
+                Value = "5000",
+                ValueType = SystemSettingValueTypes.Number,
+                Group = SystemSettingGroups.Import,
+                Description = "xlsx 导入任务单个文件允许的最大数据行数",
+                Sort = 10
+            },
+            new()
+            {
+                Id = Guid.Parse("f6e804b2-0ea7-e13a-7787-b03c1b505312"),
+                Key = "announcement.loginPopupEnabled",
+                Name = "登录弹出公告",
+                Value = "true",
+                ValueType = SystemSettingValueTypes.Boolean,
+                Group = SystemSettingGroups.Announcement,
+                Description = "开启后用户登录时展示未读公告弹窗",
+                Sort = 10
+            }
+        };
+
+        foreach (var setting in settings)
+        {
+            if (!await freeSql.Select<SystemSetting>().AnyAsync(x => x.Id == setting.Id, ct))
+            {
+                await freeSql.Insert(setting).ExecuteAffrowsAsync(ct);
+                continue;
+            }
+
+            await freeSql.Update<SystemSetting>(setting.Id)
+                .Set(x => x.Key, setting.Key)
+                .Set(x => x.Name, setting.Name)
+                .Set(x => x.ValueType, setting.ValueType)
+                .Set(x => x.Group, setting.Group)
+                .Set(x => x.Description, setting.Description)
+                .Set(x => x.Sort, setting.Sort)
+                .ExecuteAffrowsAsync(ct);
+        }
     }
 
     private async Task SeedMenusAsync(IFreeSql freeSql, Guid adminRoleId, CancellationToken ct)
@@ -128,6 +287,11 @@ public class SystemDataSeedContributor : BackgroundService
             new() { Id = Guid.Parse("f6e804b2-0ea7-e13a-7787-b03c1b505213"), Name = "数据字典", RouteName = "Dict", Path = "system/dict/index" },
             new() { Id = Guid.Parse("f6e804b2-0ea7-e13a-7787-b03c1b505214"), Name = "字典数据", RouteName = "DictItems", Path = "system/dict/item" },
             new() { Id = Guid.Parse("f6e804b2-0ea7-e13a-7787-b03c1b505215"), Name = "任务中心", RouteName = "Jobs", Path = "system/jobs/index" },
+            new() { Id = Guid.Parse("f6e804b2-0ea7-e13a-7787-b03c1b505216"), Name = "系统参数", RouteName = "SystemSettings", Path = "system/settings/index" },
+            new() { Id = Guid.Parse("f6e804b2-0ea7-e13a-7787-b03c1b505217"), Name = "在线用户", RouteName = "OnlineUsers", Path = "monitor/online-users/index" },
+            new() { Id = Guid.Parse("f6e804b2-0ea7-e13a-7787-b03c1b505218"), Name = "文件管理", RouteName = "FileManagement", Path = "system/files/index" },
+            new() { Id = Guid.Parse("f6e804b2-0ea7-e13a-7787-b03c1b505219"), Name = "数据导入", RouteName = "ImportTasks", Path = "system/imports/index" },
+            new() { Id = Guid.Parse("f6e804b2-0ea7-e13a-7787-b03c1b505220"), Name = "系统公告", RouteName = "SystemAnnouncements", Path = "system/announcements/index" },
         };
 
         foreach (var page in pages)
@@ -342,6 +506,54 @@ public class SystemDataSeedContributor : BackgroundService
                 Order = 4,
                 PageId = Guid.Parse("f6e804b2-0ea7-e13a-7787-b03c1b505215")
             },
+            new()
+            {
+                Id = Guid.Parse("f6e804b2-0ea7-e13a-7787-b03c1b505115"),
+                ParentId = Guid.Parse("f6e804b2-0ea7-e13a-7787-b03c1b505110"),
+                Name = "系统参数",
+                Path = "/system/settings",
+                Icon = "lucide:settings",
+                Type = IdentityMenuType.Menu,
+                Level = 2,
+                Order = 5,
+                PageId = Guid.Parse("f6e804b2-0ea7-e13a-7787-b03c1b505216")
+            },
+            new()
+            {
+                Id = Guid.Parse("f6e804b2-0ea7-e13a-7787-b03c1b505116"),
+                ParentId = Guid.Parse("f6e804b2-0ea7-e13a-7787-b03c1b505110"),
+                Name = "文件管理",
+                Path = "/system/files",
+                Icon = "lucide:folder-open",
+                Type = IdentityMenuType.Menu,
+                Level = 2,
+                Order = 6,
+                PageId = Guid.Parse("f6e804b2-0ea7-e13a-7787-b03c1b505218")
+            },
+            new()
+            {
+                Id = Guid.Parse("f6e804b2-0ea7-e13a-7787-b03c1b505117"),
+                ParentId = Guid.Parse("f6e804b2-0ea7-e13a-7787-b03c1b505110"),
+                Name = "数据导入",
+                Path = "/system/imports",
+                Icon = "lucide:file-up",
+                Type = IdentityMenuType.Menu,
+                Level = 2,
+                Order = 7,
+                PageId = Guid.Parse("f6e804b2-0ea7-e13a-7787-b03c1b505219")
+            },
+            new()
+            {
+                Id = Guid.Parse("f6e804b2-0ea7-e13a-7787-b03c1b505118"),
+                ParentId = Guid.Parse("f6e804b2-0ea7-e13a-7787-b03c1b505110"),
+                Name = "系统公告",
+                Path = "/system/announcements",
+                Icon = "lucide:megaphone",
+                Type = IdentityMenuType.Menu,
+                Level = 2,
+                Order = 8,
+                PageId = Guid.Parse("f6e804b2-0ea7-e13a-7787-b03c1b505220")
+            },
             // Group: 系统监控
             new()
             {
@@ -390,6 +602,18 @@ public class SystemDataSeedContributor : BackgroundService
                 Order = 3,
                 PageId = Guid.Parse("f6e804b2-0ea7-e13a-7787-b03c1b505212")
             },
+            new()
+            {
+                Id = Guid.Parse("f6e804b2-0ea7-e13a-7787-b03c1b505144"),
+                ParentId = Guid.Parse("f6e804b2-0ea7-e13a-7787-b03c1b505140"),
+                Name = "在线用户",
+                Path = "/monitor/online-users",
+                Icon = "lucide:users",
+                Type = IdentityMenuType.Menu,
+                Level = 2,
+                Order = 4,
+                PageId = Guid.Parse("f6e804b2-0ea7-e13a-7787-b03c1b505217")
+            },
 
             // 权限点示例 (以角色管理为例)
             new()
@@ -431,6 +655,56 @@ public class SystemDataSeedContributor : BackgroundService
                 Type = IdentityMenuType.AuthPoint,
                 Level = 3,
                 Order = 4
+            },
+            new()
+            {
+                Id = Guid.Parse("f6e804b2-0ea7-e13a-7787-b03c1b505311"),
+                ParentId = Guid.Parse("f6e804b2-0ea7-e13a-7787-b03c1b505118"),
+                Name = "查看",
+                Path = "MyApi.Announcements",
+                Type = IdentityMenuType.AuthPoint,
+                Level = 3,
+                Order = 1
+            },
+            new()
+            {
+                Id = Guid.Parse("f6e804b2-0ea7-e13a-7787-b03c1b505312"),
+                ParentId = Guid.Parse("f6e804b2-0ea7-e13a-7787-b03c1b505118"),
+                Name = "创建",
+                Path = "MyApi.Announcements.Create",
+                Type = IdentityMenuType.AuthPoint,
+                Level = 3,
+                Order = 2
+            },
+            new()
+            {
+                Id = Guid.Parse("f6e804b2-0ea7-e13a-7787-b03c1b505313"),
+                ParentId = Guid.Parse("f6e804b2-0ea7-e13a-7787-b03c1b505118"),
+                Name = "更新",
+                Path = "MyApi.Announcements.Update",
+                Type = IdentityMenuType.AuthPoint,
+                Level = 3,
+                Order = 3
+            },
+            new()
+            {
+                Id = Guid.Parse("f6e804b2-0ea7-e13a-7787-b03c1b505314"),
+                ParentId = Guid.Parse("f6e804b2-0ea7-e13a-7787-b03c1b505118"),
+                Name = "删除",
+                Path = "MyApi.Announcements.Delete",
+                Type = IdentityMenuType.AuthPoint,
+                Level = 3,
+                Order = 4
+            },
+            new()
+            {
+                Id = Guid.Parse("f6e804b2-0ea7-e13a-7787-b03c1b505315"),
+                ParentId = Guid.Parse("f6e804b2-0ea7-e13a-7787-b03c1b505118"),
+                Name = "发布/下线",
+                Path = "MyApi.Announcements.Publish",
+                Type = IdentityMenuType.AuthPoint,
+                Level = 3,
+                Order = 5
             },
         };
 

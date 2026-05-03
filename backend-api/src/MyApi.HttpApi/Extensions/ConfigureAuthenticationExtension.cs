@@ -1,6 +1,8 @@
-﻿using System.Text;
+﻿using System.Security.Claims;
+using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
+using MyApi.Domain.Identities;
 
 namespace MyApi.HttpApi.Extensions;
 
@@ -41,6 +43,24 @@ public static class ConfigureAuthenticationExtension
                         }
 
                         return Task.CompletedTask;
+                    },
+                    OnTokenValidated = async context =>
+                    {
+                        var userIdValue = context.Principal?.FindFirst(ClaimTypes.Sid)?.Value;
+                        var sessionIdValue = context.Principal?.FindFirst(OnlineUserSessionManager.SessionIdClaimType)?.Value;
+
+                        if (!Guid.TryParse(userIdValue, out var userId) ||
+                            !Guid.TryParse(sessionIdValue, out var sessionId))
+                        {
+                            context.Fail("Invalid login session.");
+                            return;
+                        }
+
+                        var sessionManager = context.HttpContext.RequestServices.GetRequiredService<OnlineUserSessionManager>();
+                        if (!await sessionManager.ValidateAsync(userId, sessionId, context.HttpContext.RequestAborted))
+                        {
+                            context.Fail("Login session expired or revoked.");
+                        }
                     }
                 };
             });

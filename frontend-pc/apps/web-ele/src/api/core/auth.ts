@@ -22,12 +22,19 @@ export namespace AuthApi {
   /** 登录接口返回值 */
   export interface LoginResult {
     accessToken: string;
+    mustChangePassword?: boolean;
     refreshToken: string;
   }
 
   export interface RefreshTokenResult {
     accessToken: string;
+    mustChangePassword?: boolean;
     refreshToken: string;
+  }
+
+  export interface ChangePasswordParams {
+    newPassword: string;
+    oldPassword: string;
   }
 }
 
@@ -57,9 +64,14 @@ export async function refreshTokenApi(refreshToken: null | string) {
  * 退出登录
  */
 export async function logoutApi() {
-  return baseRequestClient.post('/basic/account/logout', {
-    withCredentials: true,
-  });
+  return requestClient.post('/basic/account/logout');
+}
+
+/**
+ * 修改当前用户密码
+ */
+export async function changePasswordApi(data: AuthApi.ChangePasswordParams) {
+  return requestClient.post('/basic/account/change-password', data);
 }
 
 /**
